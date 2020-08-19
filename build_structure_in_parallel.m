@@ -33,7 +33,7 @@ nRegions = NUM_PARTITIONS_J.^mLevels; % Vector of regions (partitions) at each l
 
 
 %% Calculate number of knots in each direction
-if isinteger(sqrt(NUM_KNOTS_r))  % Assign knots.
+if floor(sqrt(NUM_KNOTS_r)) == sqrt(NUM_KNOTS_r)  % Assign knots
     nKnotsX0 = sqrt(NUM_KNOTS_r); nKnotsX = sqrt(NUM_KNOTS_r); % Number of knots in x-direction
     nKnotsY0 = sqrt(NUM_KNOTS_r); nKnotsY = sqrt(NUM_KNOTS_r); % Number of knots in y-direction
 else
@@ -80,34 +80,23 @@ knots(1,1:NUM_WORKERS) = {[knotsX(:), knotsY(:)]}; % Knots at coarsest resolutio
 % Each branch at the coarest resolution will be contained within same
 % region
 partitions(1,1:NUM_WORKERS) = {[ xMin, xMax, yMin, yMax ]};
-%% Create portion of partitions that has repeated entries across columns
-for iRow = 2:nRowsWithRepeatedEntriesInIndexMatrix
-    nTimesEachIndexIsRepeatedThisRow = NUM_WORKERS/nRegions(iRow);
-    jBeginningColumnEntries = 1:nTimesEachIndexIsRepeatedThisRow:NUM_WORKERS;
-    parentsOfThisRow = unique(indexMatrix(iRow-1,:));
-    columnToEnterMatrix = reshape(jBeginningColumnEntries, [], length(parentsOfThisRow));
-    for jj = 1:length(parentsOfThisRow)
-        jParent = parentsOfThisRow(jj);
-        % WLOG, Get first column entry (not specific) of the iRow above
-        % containing this jParent
-        firstColContainingThisParent = find(indexMatrix(iRow-1,:)==jParent, 1 );
-        % Get partitions for this jParent
-        thisParentsPartitions = gather(partitions(iRow-1,firstColContainingThisParent));
-        xMin = thisParentsPartitions{:}(:,1);
-        xMax = thisParentsPartitions{:}(:,2);
-        yMin = thisParentsPartitions{:}(:,3);
-        yMax = thisParentsPartitions{:}(:,4);       
-        for lPartition = 1:NUM_PARTITIONS_J
-            % Get correct column to enter
-            columnToEnter = columnToEnterMatrix(lPartition, jj);           
-            % Create knots & partitions
-            [knotsX,knotsY] = create_knots(xMin(lPartition), xMax(lPartition), nKnotsX, yMin(lPartition), yMax(lPartition), nKnotsY, offsetPercentage);
-            [ xMinTemp, xMaxTemp, yMinTemp, yMaxTemp ] = create_partition(xMin(lPartition), xMax(lPartition), yMin(lPartition), yMax(lPartition), NUM_PARTITIONS_J);
-            % Place knots partitions in array entries corresponding to
-            % this index
-            knots(iRow, columnToEnter:columnToEnter+nTimesEachIndexIsRepeatedThisRow-1) = {[knotsX(:),knotsY(:)]};
-            partitions(iRow, columnToEnter:columnToEnter+nTimesEachIndexIsRepeatedThisRow-1) = {[ xMinTemp, xMaxTemp, yMinTemp, yMaxTemp ]};            
-        end
+
+%% Loop up until level M-1 creating partitions and placing knots
+
+spmd(NUM_WORKERS)
+    for iRow = 2 : 2 %indexOfFinestKnotLevelWithinIndexMatrix
+           % Find this region's index
+           indexCurrent = indexMatrix(iRow, labindex);
+           % Find this region's parent and assign it to an int
+           [~, ~, indexParent] = find_parent(indexCurrent, nRegions, NUM_PARTITIONS_J);
+           % Find this region's parent's location in indexMatrix
+           thisIndexParentInIndexMatrix = sum(indexMatrix(:, labindex) <= indexParent);
+           % Get partition coordinates of parent
+           parentPartitionsLocalPart = getLocalPart(partitions(thisIndexParentInIndexMatrix, labindex));
+           xMin = parentPartitionsLocalPart{:}(:,1); xMax = parentPartitionsLocalPart{:}(:,2); yMin = parentPartitionsLocalPart{:}(:,3); yMax = parentPartitionsLocalPart{:}(:,4);
+           if labindex ==1
+               disp(xMin)
+           end        
     end
 end
 
