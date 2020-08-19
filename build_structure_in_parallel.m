@@ -53,7 +53,7 @@ nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.
 %% Create matrix to store continuous index for all regions
 [indexMatrix] = create_indexMatrix( NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, nLevelsInSerial, nTotalRegionsAssignedToEachWorker);
 % Find the index within the indexMatrix corresponding to the finest level at which the knots are not set to the data.
-indexOfFinestKnotLevelWithinIndexMatrix = find(indexMatrix(:,end)==indexEndFinestKnotLevel);
+indexOfFinestKnotLevelWithinIndexMatrix = find(indexMatrix(:,end) == indexEndFinestKnotLevel);
 nRowsWithRepeatedEntriesInIndexMatrix = sum(nRegions < NUM_WORKERS);
 %% Pre-allocate memory for codistributed arrays
 spmd(NUM_WORKERS)

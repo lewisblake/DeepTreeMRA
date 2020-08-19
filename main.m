@@ -19,6 +19,14 @@ user_input;
 %% Validate User Input
 validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, nLevelsInSerial, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath);
 
+
+if isempty(gcp) % If there is no current parallel pool
+    parpool(NUM_WORKERS) % Create parallel pool on default cluster of size NUM_WORKERS
+    poolobj = gcp;
+    addAttachedFiles(poolobj, {'find_ancestry.m'} ) % can I add all files at once?
+end
+
+
 %% Data Processing: Load data using load_data() function
 [ data, regressionModel, domainBoundaries, predictionVector, theta, varEps ] = load_data(dataSource, nXGrid, nYGrid, offsetPercentage);
 
