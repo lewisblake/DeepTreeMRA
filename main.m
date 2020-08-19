@@ -23,7 +23,7 @@ validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r
 if isempty(gcp) % If there is no current parallel pool
     parpool(NUM_WORKERS) % Create parallel pool on default cluster of size NUM_WORKERS
     poolobj = gcp;
-    addAttachedFiles(poolobj, {'find_ancestry.m'} ) % can I add all files at once?
+    addAttachedFiles(poolobj, {'find_ancestry.m', 'build_structure_in_parallel.m'} ) % can I add all files at once?
 end
 
 
