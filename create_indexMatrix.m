@@ -1,4 +1,4 @@
-function [indexMatrix] = create_indexMatrix(NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, nLevelsInSerial,nTotalRegionsAssignedToEachWorker)
+function [indexMatrix] = create_indexMatrix(NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVELS_SERIAL_S,nTotalRegionsAssignedToEachWorker)
 %% Create the indexMatrix
 %  Input: NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, nWorkersUsed, nTotalRegionsAssignedToEachWorker
 %  nLevelsInSerial, 
@@ -6,45 +6,29 @@ function [indexMatrix] = create_indexMatrix(NUM_LEVELS_M, NUM_PARTITIONS_J, nReg
 %  Output: indexMatrix
 %
 
-nLevelToBeginParallel = nLevelsInSerial +1;
+nLevelToBeginParallel = NUM_LEVELS_IN_SERIAL_S +1;
 % Calculate necessary quantities
 cummulativeRegions = cumsum(nRegions);
-%vectorOfRegionsAtNLevelsInSerial = nRegions(nLevelsInSerial):cummulativeRegions(nLevelsInSerial); % Create a vector of alll the regions where we will compute in serial
-%matrixOfRegionsAtNLevelsInSerial = reshape(vectorOfRegionsAtNLevelsInSerial, [], nWorkersUsed); % Reshape that vector to extract the correct indexes in the following for-loop
-vecOfRegionsAtFirstParallelLevel = nRegions(nLevelsInSerial+1):cummulativeRegions(nLevelsInSerial+1);
+vecOfRegionsAtFirstParallelLevel = nRegions(NUM_LEVELS_IN_SERIAL_S+1):cummulativeRegions(NUM_LEVELS_IN_SERIAL_S+1);
 matrixOfRegionsAtFirstParallelLevel = reshape(vecOfRegionsAtFirstParallelLevel, [], NUM_WORKERS);
 % Calculate quantities needed for nTotalRegionsAssignedToEachWorker
 maxLevelOnASingleRow = sum(nRegions <= NUM_WORKERS); % How many times indices from a level are assigned to a worker
 counter = 1:(NUM_LEVELS_M - maxLevelOnASingleRow);
 nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.^counter);
-% Pre-allocated memory for indexMatrix
 
-%spmd(NUM_WORKERS)
-%    codistributionScheme = codistributor1d(2); % Distribute across the second dimension
-%    indexMatrix = nan(nTotalRegionsAssignedToEachWorker, NUM_WORKERS, codistributionScheme);
-%end
-
+% Allocate space for indexMatrix
 indexMatrix = nan(nTotalRegionsAssignedToEachWorker, NUM_WORKERS);
 
-%spmd(NUM_WORKERS) % Construct the indexMatrix in parallel. Works!
-for iWorker = 1:NUM_WORKERS  % Keep for testing 
-    %indexMatrix = nan(nTotalRegionsAssignedToEachWorker, 1); % LB: Need ot think if I want indexMatrix Composite or Codistributed
-    
-    
-    %tempVecOfRegionsAtNLevelsSerial = matrixOfRegionsAtNLevelsInSerial(:,iWorker); % Collect columns of matrix
-    % Double check this later on
-    % LB 12/1: Changed everything to be based on nLevelToBeginInParallel
+% Loop through all workers
+for iWorker = 1:NUM_WORKERS   
     if NUM_WORKERS == length(vecOfRegionsAtFirstParallelLevel)%length(vectorOfRegionsAtNLevelsInSerial) 
         indexMatrix(nLevelToBeginParallel, iWorker) = vecOfRegionsAtFirstParallelLevel(iWorker); % Regions above will not take vertical space in indexMatrix
-        indexMatrix(1:nLevelsInSerial, iWorker) = find_ancestry(indexMatrix(nLevelToBeginParallel, iWorker), nRegions, NUM_PARTITIONS_J);
+        indexMatrix(1:NUM_LEVELS_IN_SERIAL_S, iWorker) = find_ancestry(indexMatrix(nLevelToBeginParallel,  iWorker), nRegions, NUM_PARTITIONS_J);
         indexMatrix(nLevelToBeginParallel:end, iWorker) = find_branch_children(indexMatrix(nLevelToBeginParallel, iWorker), nRegions, NUM_PARTITIONS_J, NUM_LEVELS_M);
         
-    %elseif nWorkersUsed > length(vecOfRegionsAtFirstParallelLevel) % LB: Even allow this case??    
-    elseif NUM_WORKERS < length(vecOfRegionsAtFirstParallelLevel)%length(vectorOfRegionsAtNLevelsInSerial)
-        % LB: This finally seems to be working now, however I would not be
-        % surprised if for some cases it fails. Right now it works for
-        % nLevelsInSerial = 4, nWorkerUsed=4
-         %Correct. Could be same as nRowsWithRepeatedEntries
+    elseif NUM_WORKERS > length(vecOfRegionsAtFirstParallelLevel) % Report error
+	error('Error in create_indexMatrix: NUM_WORKERS can not be larger than nRegions(nLevelsInSerial');    
+    elseif NUM_WORKERS < length(vecOfRegionsAtFirstParallelLevel)
         % Assign the regions allocated to this worker in a vector
         thisWorkerParallelAssignment = matrixOfRegionsAtFirstParallelLevel(:, iWorker);
         % Find all parents of the first parallel level. Store in vector
@@ -77,7 +61,7 @@ for iWorker = 1:NUM_WORKERS  % Keep for testing
         tempVecOfParentsAncestors = unique(tempVecOfParentsAncestors);
         
         % Stack them all in a vector and store it into the indexMatrix
-        indexMatrix(:) = [tempVecOfParentsAncestors; tempVecOfParentsOfFirstParallelLevel; tempVecOfParentsDescendents];
+        indexMatrix(:, iWorker) = [tempVecOfParentsAncestors; tempVecOfParentsOfFirstParallelLevel; tempVecOfParentsDescendents];
       
     end    
 end
