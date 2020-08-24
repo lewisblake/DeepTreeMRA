@@ -29,7 +29,7 @@ end
 mLevels = 0:NUM_LEVELS_M-1; % Create a vector of levels
 nRegions = NUM_PARTITIONS_J.^mLevels; % Vector of regions (partitions) at each level
 %totalRegions = sum(nRegions); % Calculate total number of regions
-%cummulativeRegions = cumsum(nRegions);
+cummulativeRegions = cumsum(nRegions);
 
 
 %% Calculate number of knots in each direction
@@ -51,7 +51,7 @@ nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.
 
 
 %% Create matrix to store continuous index for all regions
-[indexMatrix] = create_indexMatrix( NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVELS_SERIAL_S, nTotalRegionsAssignedToEachWorker);
+[indexMatrix] = create_indexMatrix( NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVELS_SERIAL_S);
 % Find the index within the indexMatrix corresponding to the finest level at which the knots are not set to the data.
 indexOfFinestKnotLevelWithinIndexMatrix = find(indexMatrix(:,end) == indexEndFinestKnotLevel);
 nRowsWithRepeatedEntriesInIndexMatrix = sum(nRegions < NUM_WORKERS);
@@ -81,9 +81,11 @@ knots(1,1:NUM_WORKERS) = {[knotsX(:), knotsY(:)]}; % Knots at coarsest resolutio
 % region
 partitions(1,1:NUM_WORKERS) = {[ xMin, xMax, yMin, yMax ]};
 
-vectorOfRegionsAtFirstParallelLevel = cumulativeRegions(NUM_LEVELS_SERIAL_S) - nRegions(NUM_LEVELS_SERIAL_S) + 1 : nRegions(NUM_LEVELS_SERIAL_S);
-%% Loop up until level M-1 creating partitions and placing knots
+vectorOfRegionsAtFirstParallelLevel = cummulativeRegions(NUM_LEVELS_SERIAL_S+1) - nRegions(NUM_LEVELS_SERIAL_S+1) +1 : cummulativeRegions(NUM_LEVELS_SERIAL_S+1);
+matrixOfRegionsAtFirstParallelLevel = reshape(vectorOfRegionsAtFirstParallelLevel, [], NUM_WORKERS);
+%% Loop creating partitions and placing knots
 spmd(NUM_WORKERS)
+    %% First loop up until level M-1 creating partitions and placing knots
     for iRow = 2 : indexOfFinestKnotLevelWithinIndexMatrix
         % Find this region's index
         indexCurrent = indexMatrix(iRow, labindex);
@@ -108,13 +110,69 @@ spmd(NUM_WORKERS)
         partitions(iRow, labindex) = {[ xMinTemp, xMaxTemp, yMinTemp, yMaxTemp ]};        
     end
     
-    % Prep for assigning data at finest resolution
+    %% Prep for assigning data at finest resolution
     thisWorkerParallelAssignment = matrixOfRegionsAtFirstParallelLevel(:, labindex);
-    beginParallelAssignment = sum(indexMatrix(:, labindex) < thisWorkerParallelAssignment(1));
-	endParallelAssignment = sum(indexMatrix(:, labindex) < thisWorkerParallelAssignment(end));
+    beginParallelAssignmentInIndexMatrix = sum(indexMatrix(:, labindex) <= thisWorkerParallelAssignment(1));
+	endParallelAssignmentInIndexMatrix = sum(indexMatrix(:, labindex) <= thisWorkerParallelAssignment(end));
+    thisWorkersAssignmentPartitions = partitions(beginParallelAssignmentInIndexMatrix: endParallelAssignmentInIndexMatrix, labindex);
+    % now we need the extreme lon/lat for this workers assignment
+    % following works because dimensions of matrices agree and therefore
+    % cell2mat can be applied. if we were considering more general
+    % paritioning methods, this would not work and we may need to consider
+    % another approach like I did in the C++ buildStructure.cpp for
+    % Math-540. But the below implementation is vectorized so for now keep.
+    thisWorkersAssignmentPartitionsAsMatrix = cell2mat(getLocalPart(thisWorkersAssignmentPartitions));
+    workerXMin = min(thisWorkersAssignmentPartitionsAsMatrix(:,1));
+    workerXMax = max(thisWorkersAssignmentPartitionsAsMatrix(:,2));
+    workerYMin = min(thisWorkersAssignmentPartitionsAsMatrix(:,3));
+    workerYMax = max(thisWorkersAssignmentPartitionsAsMatrix(:,4));
+    % selecting only the subset needed by this worker
+    thisWorkersDataRows = data(:,1) >= workerXMin & data(:,1) <= workerXMax & data(:,2) >= workerYMin & data(:,2) <= workerYMax;
+    thisWorkersData = data(thisWorkersDataRows,:);
+    data = []; % force data out of memory since now allocated subsets to workers
     
+    %% Loop through final resolution (i.e., level m = M) assigning data to the knots
+    
+    %% Special construct to find knots for finest resolution region
+    if numVarArgs == 2 % If data is sent to build_structure_in_parallel
+        for iRow = indexOfFinestKnotLevelWithinIndexMatrix + 1 : nTotalRegionsAssignedToEachWorker
+            % Find this region's index
+            indexCurrent = indexMatrix(iRow);
+            % Find this region's parent and assign it to an int
+            [~, ~, indexParent] = find_parent(indexCurrent, nRegions, NUM_PARTITIONS_J);
+            % Find this region's parent's location in indexMatrix
+            thisIndexParentInIndexMatrix = sum(indexMatrix(:, labindex) <= indexParent);
+            % Get partition coordinates of parent
+            parentPartitionsLocalPart = getLocalPart(partitions(thisIndexParentInIndexMatrix, labindex));
+            xMin = parentPartitionsLocalPart{:}(:,1); xMax = parentPartitionsLocalPart{:}(:,2); yMin = parentPartitionsLocalPart{:}(:,3); yMax = parentPartitionsLocalPart{:}(:,4);
+            foundChildren = find_children(indexParent, nRegions, NUM_PARTITIONS_J);
+            thesePartitionBoundaries = find(foundChildren <= indexCurrent, 1, 'last'); % LB: Think this is faster than applying find() to direct values since logical array but need to check
+            thisXMin = xMin(thesePartitionBoundaries); thisXMax = xMax(thesePartitionBoundaries);
+            thisYMin = yMin(thesePartitionBoundaries); thisYMax = yMax(thesePartitionBoundaries);
+            % find the rows of this worker's data which are contained within
+            % the boundaries of this region
+            thisRegionsDataRows = thisWorkersData(:,1) >= thisXMin & thisWorkersData(:,1) <= thisXMax & thisWorkersData(:,2) >= thisYMin & thisWorkersData(:,2) <= thisYMax;
+            % assign the lon/lat of the observations in this region to be the
+            % knots
+            knots(iRow, labindex) = {thisWorkersData(thisRegionsDataRows, 1:2)};
+            % assign the observations in this region to the assocaited cell of
+            % outputData
+            outputData(iRow - indexOfFinestKnotLevelWithinIndexMatrix, :) = {thisWorkersData(thisRegionsDataRows, 3)};
+            thisWorkersData(thisRegionsDataRows,:) = []; % Eliminate the data that has already been assigned to a region, speeds up subsequent searching
+        
+            % Vinay's addition
+            if ~isnan(predictionVector) % If predicting
+                predictionIndex = find(predictionVector(:,1) >= thisXMin & predictionVector(:,1) < thisXMax & predictionVector(:,2) >= thisYMin & predictionVector(:,2) < thisYMax); % Find the predictionVector locations within this region
+                predictionLocations(iRow - indexOfFinerstKnotLevelWithinIndexMatrix, labindex) = {predictionVector(predictionIndex,:)}; % Assign predictionVector locations within this region to corresponding entry of predictionLocations codistributed cell
+            else
+                predictionLocations = NaN;
+            end          
+        end
+    end
     
 end
+
+disp('Building the hierarchical structure complete.')
 
 %% Create partitions and knots up until finestKnotLevel
 spmd(NUM_WORKERS)
