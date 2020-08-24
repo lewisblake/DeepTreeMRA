@@ -12,13 +12,7 @@ function [elapsedTime] = main()
 %   Option 'likelihood' only calculates the likelihood.
 %
 % Documentation in these scripts will make references to Katzfuss, 2017.
-%% User Input
-% Run user_input.m script to get variables into workspace
-user_input;
-
-%% Validate User Input
-validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath);
-
+%% Set up parallel pool - temproary for development
 
 if isempty(gcp) % If there is no current parallel pool
     parpool(NUM_WORKERS) % Create parallel pool on default cluster of size NUM_WORKERS
@@ -26,14 +20,21 @@ if isempty(gcp) % If there is no current parallel pool
     addAttachedFiles(poolobj, {'find_ancestry.m', 'build_structure_in_parallel.m'} ) % can I add all files at once?
 end
 
+tic;
+%% User Input
+% Run user_input.m script to get variables into workspace
+user_input;
+
+%% Validate User Input
+validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath);
 
 %% Data Processing: Load data using load_data() function
 [ data, regressionModel, domainBoundaries, predictionVector, theta, varEps ] = load_data(dataSource, nXGrid, nYGrid, offsetPercentage);
 
 %% Build hierarchical grid structure using build_structure_in_parallel() function
 [ knots, ~, nRegions, outputData, predictionLocations, indexMatrix ] = build_structure_in_parallel( NUM_LEVELS_M, ...
-    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, nLevelsInSerial, data(:,1:3), predictionVector );
-
+    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, data(:,1:3), predictionVector );
+toc;
 %% Switch clause for calculationType
 switch calculationType
     case 'build_structure'

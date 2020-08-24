@@ -131,9 +131,8 @@ spmd(NUM_WORKERS)
     thisWorkersData = data(thisWorkersDataRows,:);
     data = []; % force data out of memory since now allocated subsets to workers
     
-    %% Loop through final resolution (i.e., level m = M) assigning data to the knots
-    
-    %% Special construct to find knots for finest resolution region
+    %% Loop through final resolution (i.e., level m = M) assigning data to the knots   
+    % Special construct to find knots for finest resolution region
     if numVarArgs == 2 % If data is sent to build_structure_in_parallel
         for iRow = indexOfFinestKnotLevelWithinIndexMatrix + 1 : nTotalRegionsAssignedToEachWorker
             % Find this region's index
@@ -163,7 +162,7 @@ spmd(NUM_WORKERS)
             % Vinay's addition
             if ~isnan(predictionVector) % If predicting
                 predictionIndex = find(predictionVector(:,1) >= thisXMin & predictionVector(:,1) < thisXMax & predictionVector(:,2) >= thisYMin & predictionVector(:,2) < thisYMax); % Find the predictionVector locations within this region
-                predictionLocations(iRow - indexOfFinerstKnotLevelWithinIndexMatrix, labindex) = {predictionVector(predictionIndex,:)}; % Assign predictionVector locations within this region to corresponding entry of predictionLocations codistributed cell
+                predictionLocations(iRow - indexOfFinestKnotLevelWithinIndexMatrix, labindex) = {predictionVector(predictionIndex,:)}; % Assign predictionVector locations within this region to corresponding entry of predictionLocations codistributed cell
             else
                 predictionLocations = NaN;
             end          
@@ -171,73 +170,5 @@ spmd(NUM_WORKERS)
     end
     
 end
-
+% Progress indicator
 disp('Building the hierarchical structure complete.')
-
-%% Create partitions and knots up until finestKnotLevel
-spmd(NUM_WORKERS)
-    for iIndex = nRowsWithRepeatedEntriesInIndexMatrix+1:indexOfFinestKnotLevelWithinIndexMatrix
-        indexCurrent = indexMatrix(iIndex, labindex); % Assign (continuous) indexCurrent from indexMatrix.
-        [~, ~, indexParent] = find_parent(indexCurrent, nRegions, NUM_PARTITIONS_J); % Find (continuous) parent of indexCurrent
-        indexOfParentWithinIndexMatrix = find(indexMatrix(:, labindex)==indexParent); % Find the index of indexParent within the indexMatrix
-        % Get entire vectors of partitions from the parent partition
-        parentPartitionsLocalPart = getLocalPart(partitions(indexOfParentWithinIndexMatrix, labindex));
-        xMin = parentPartitionsLocalPart{:}(:,1);
-        xMax = parentPartitionsLocalPart{:}(:,2);
-        yMin = parentPartitionsLocalPart{:}(:,3);
-        yMax = parentPartitionsLocalPart{:}(:,4);
-        % Assign correct xMin,...,yMax for THIS indexCurrent
-        thesePartitionBoundaries = find(indexCurrent == find_children(indexParent, nRegions, NUM_PARTITIONS_J));
-        thisXMin = xMin(thesePartitionBoundaries); thisXMax = xMax(thesePartitionBoundaries);
-        thisYMin = yMin(thesePartitionBoundaries); thisYMax = yMax(thesePartitionBoundaries);
-        % With the correct thisXMin,...,thisYMax, create the knots and
-        % partitions for this indexCurrent and store them in their
-        % corrresponding locations within indexMatrix
-        [knotsX,knotsY] = create_knots(thisXMin, thisXMax, nKnotsX, thisYMin, thisYMax, nKnotsY, offsetPercentage);
-        [ xMinTemp, xMaxTemp, yMinTemp, yMaxTemp ] = create_partition(thisXMin, thisXMax, thisYMin, thisYMax, NUM_PARTITIONS_J);
-        indexOfIndexCurrentWithinIndexMatrix = find(indexMatrix(:, labindex)==indexCurrent);
-        knots(indexOfIndexCurrentWithinIndexMatrix, labindex) = {[knotsX(:),knotsY(:)]};
-        partitions(indexOfIndexCurrentWithinIndexMatrix, labindex) = {[ xMinTemp, xMaxTemp, yMinTemp, yMaxTemp ]};
-    end
-end
-
-%% Special construct to find knots for finest resolution region
-if numVarArgs == 2 % If data is sent to build_structure_in_parallel
-    spmd(NUM_WORKERS)
-        for iIndex = indexOfFinestKnotLevelWithinIndexMatrix + 1 : length(indexMatrix)
-            mCounterIndex = iIndex - indexOfFinestKnotLevelWithinIndexMatrix; % Create a counter index to get into outputData and predictionLocations starting at index 1 to maintain minimal size
-            indexCurrent = indexMatrix(iIndex, labindex); % Find the indexCurrent from indexMatrix
-            [~, ~, indexParent] = find_parent(indexCurrent, nRegions, NUM_PARTITIONS_J); % Find unique parent of indexCurrent
-            indexOfParentWithinIndexMatrix = find(indexMatrix(:, labindex)==indexParent); % Find the index within the indexMatrix of indexParent
-            % On this worker, get the local part of the partitions
-            % corresponding to indexParent as determined by
-            % indexParent's index within the indexMatrix
-            parentPartitionsLocalPart = getLocalPart(partitions(indexOfParentWithinIndexMatrix, labindex));
-            xMin = parentPartitionsLocalPart{:}(:,1);
-            xMax = parentPartitionsLocalPart{:}(:,2);
-            yMin = parentPartitionsLocalPart{:}(:,3);
-            yMax = parentPartitionsLocalPart{:}(:,4);
-            % Assign correct xMin,...,yMax for THIS indexCurrent
-            thesePartitionBoundaries = find(indexCurrent == find_children(indexParent, nRegions, NUM_PARTITIONS_J));
-            thisXMin = xMin(thesePartitionBoundaries); thisXMax = xMax(thesePartitionBoundaries);
-            thisYMin = yMin(thesePartitionBoundaries); thisYMax = yMax(thesePartitionBoundaries);
-            % Collect the data needed for this region
-            ind = find(data(:,1) >= thisXMin & data(:,1) < thisXMax & data(:,2) >= thisYMin & data(:,2) < thisYMax); % Find the indicies for the data within the data matrix that are within thisXMin,...,thisYMax
-            knotsX=data(ind,1); knotsY=data(ind,2); % Set the knots to these data
-            indexOfIndexCurrentWithinIndexMatrix = find(indexMatrix(:, labindex)==indexCurrent); % Find the index of indexCurrent within the indexMatrix
-            knots(indexOfIndexCurrentWithinIndexMatrix, labindex) = {[knotsX(:),knotsY(:)]}; % Place knotsX(:) and knotsY(:) in their corresponding location within the knots codistributed cell
-            outputData(mCounterIndex,labindex) = {data(ind,3)}; % Place data within thisXMin,...,thisYMax within outputData
-            data(ind,:) = []; % Eliminate the data that has already been assigned to a region, speeds up subsequent searching
-            % Vinay's addition
-            if ~isnan(predictionVector) % If predicting
-                predictionIndex = find(predictionVector(:,1) >= thisXMin & predictionVector(:,1) < thisXMax & predictionVector(:,2) >= thisYMin & predictionVector(:,2) < thisYMax); % Find the predictionVector locations within this region
-                predictionLocations(mCounterIndex, labindex) = {predictionVector(predictionIndex,:)}; % Assign predictionVector locations within this region to corresponding entry of predictionLocations codistributed cell
-            else
-                predictionLocations = NaN;
-            end          
-        end
-    end
-    disp('Building the hierarchical structure complete.')
-end
-
-
