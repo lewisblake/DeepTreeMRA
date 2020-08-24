@@ -20,7 +20,6 @@ if isempty(gcp) % If there is no current parallel pool
     addAttachedFiles(poolobj, {'find_ancestry.m', 'build_structure_in_parallel.m'} ) % can I add all files at once?
 end
 
-tic;
 %% User Input
 % Run user_input.m script to get variables into workspace
 user_input;
@@ -34,7 +33,7 @@ validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r
 %% Build hierarchical grid structure using build_structure_in_parallel() function
 [ knots, ~, nRegions, outputData, predictionLocations, indexMatrix ] = build_structure_in_parallel( NUM_LEVELS_M, ...
     NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, data(:,1:3), predictionVector );
-toc;
+
 %% Switch clause for calculationType
 switch calculationType
     case 'build_structure'
