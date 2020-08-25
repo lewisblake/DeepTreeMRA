@@ -54,7 +54,7 @@ nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.
 [indexMatrix] = create_indexMatrix( NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVELS_SERIAL_S);
 % Find the index within the indexMatrix corresponding to the finest level at which the knots are not set to the data.
 indexOfFinestKnotLevelWithinIndexMatrix = find(indexMatrix(:,end) == indexEndFinestKnotLevel);
-nRowsWithRepeatedEntriesInIndexMatrix = sum(nRegions < NUM_WORKERS);
+%nRowsWithRepeatedEntriesInIndexMatrix = sum(nRegions < NUM_WORKERS);
 %% Pre-allocate memory for codistributed arrays
 spmd(NUM_WORKERS)
     codistributionScheme = codistributor1d(2); % Distribute across the second dimension
@@ -136,7 +136,7 @@ spmd(NUM_WORKERS)
     if numVarArgs == 2 % If data is sent to build_structure_in_parallel
         for iRow = indexOfFinestKnotLevelWithinIndexMatrix + 1 : nTotalRegionsAssignedToEachWorker
             % Find this region's index
-            indexCurrent = indexMatrix(iRow);
+            indexCurrent = indexMatrix(iRow, labindex);
             % Find this region's parent and assign it to an int
             [~, ~, indexParent] = find_parent(indexCurrent, nRegions, NUM_PARTITIONS_J);
             % Find this region's parent's location in indexMatrix
@@ -156,7 +156,7 @@ spmd(NUM_WORKERS)
             knots(iRow, labindex) = {thisWorkersData(thisRegionsDataRows, 1:2)};
             % assign the observations in this region to the assocaited cell of
             % outputData
-            outputData(iRow - indexOfFinestKnotLevelWithinIndexMatrix, :) = {thisWorkersData(thisRegionsDataRows, 3)};
+            outputData(iRow - indexOfFinestKnotLevelWithinIndexMatrix, labindex) = {thisWorkersData(thisRegionsDataRows, 3)};
             thisWorkersData(thisRegionsDataRows,:) = []; % Eliminate the data that has already been assigned to a region, speeds up subsequent searching
         
             % Vinay's addition

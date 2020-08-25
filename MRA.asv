@@ -76,7 +76,6 @@ end
 %% Main spmd block to create prior and parallel portion of posterio
 
 spmd(NUM_WORKERS)
-     mCounterIndex = 1; % LB: potential room for optimization.
     for iRow = 1 :  nTotalRegionsAssignedToEachWorker
         indexCurrent = indexMatrix(iRow, labindex);
         % Find the ancestry for this jRegion
@@ -95,15 +94,15 @@ spmd(NUM_WORKERS)
             NUM_LEVELS_M, knotsLocalPart, RpriorCholLocalPart,...
             KcBLocalPart, [], varEps, []);
         else
-            dataLocalPart = getLocalPart(outputData(mCounterIndex, labindex));
+            dataLocalPart = getLocalPart(outputData(iRow - indexOfFinestKnotLevelWithinIndexMatrix, labindex));
             predictionLocationsLocalPart = getLocalPart(predictionLocations(mCounterIndex, labindex));
             % Create the prior
             [thisRpriorChol, thisKcholBchol, thisAtj, thiswtj, thisRetLikPred] = create_prior(theta, ...
                 NUM_LEVELS_M, knotsLocalPart, RpriorCholLocalPart,...
                 KcBLocalPart, dataLocalPart{:}, varEps, predictionLocationsLocalPart{:});
 
-            AtildePrevious(mCounterIndex, labindex) = {thisAtj};
-            wtildePrevious(mCounterIndex, labindex) = {thiswtj};
+            AtildePrevious(iRow - , labindex) = {thisAtj};
+            wtildePrevious(iRow, labindex) = {thiswtj};
             if isPredicting  % If predicting
                 posteriorPredictionMean(mCounterIndex, labindex) = {thisRetLikPred{1}};
                 posteriorPredictionVariance(mCounterIndex, labindex) = {thisRetLikPred{2}};
