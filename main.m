@@ -86,7 +86,8 @@ switch calculationType
             NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, nLevelsInSerial, NUM_WORKERS, verbose, varEps);  % Unsuppress output to print to command window
         elapsedTime = toc; % Unsuppress output to print to command window
         if verbose % Display the sumLogLikelihood
-            sumLogLikelihood
+            disp('sumLogLikelihood:');
+            disp(sumLogLikelihood);
         end
         % Save likelihood results
         save([resultsFilePath, 'Likelihood_Results'], 'sumLogLikelihood');
