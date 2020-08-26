@@ -33,6 +33,7 @@ lastRowBeforeFinestLevel = find(indexMatrix(:,end)==lastIndexOfSecondFinestLevel
 lastIndexOfSerialLevel = nRegions(NUM_LEVELS_SERIAL_S+1)-1;
 [lastRowInSerial, ~] = find(indexMatrix(:,:) == lastIndexOfSerialLevel,1);
 
+
 %% Pre-allocate space for codistributed arrays
 if verbose
     disp('In MRA.m: Pre-allocating space for objects ...')
@@ -129,7 +130,7 @@ end
 %% The above end and below spmd call are temp4dev.
 spmd(NUM_WORKERS)
     % Second part of MRA: Caclulate the poster from "finest to coarsest".
-    for iRow = lastRowBeforeFinestLevel:-1:maxLevelOnASingleRow+1 
+    for iRow = lastRowBeforeFinestLevel:-1:maxLevelOnASingleRow
         index = indexMatrix(iRow, labindex);
         [indexChildren] = find_children(index, nRegions, NUM_PARTITIONS_J);
         % Fill vector with location of indexAncestry in indexMatrix
@@ -159,13 +160,31 @@ spmd(NUM_WORKERS)
             logLikelihoodSum = logLikelihoodSum + logLikelihoodj;
         end
     end
+    
 end
 
 %% "Serial Section"
 % Now the question becomes what to do with the "serial" portion of the
 % posterior. Want to minimize gathering from workers to clients. Also want
 % to do "serial" portion as little as possible, so that we perofm in
-% paralle until the number of regions at the level is equal to NUM_WORKERS
+% parallel until the number of regions at the level is equal to NUM_WORKERS
+
+% Below is code to only gather the subsets of the distributed matrices
+% needed on the client. nd2sub() is to get the sub-scripting index of a sub-matrix, and then sub2ind() is for taking these subscripts and relating them to linear indices in the entire matrix.
+% Gather Rprior first since only need this level's entries
+[~, indicesForRpriorChol] = unique(indexMatrix(1:maxLevelOnASingleRow, :),'first');
+[rowSerialPortionForRpriorChol, colSerialPortionForRpriorChol] = ind2sub(size(indexMatrix(1:maxLevelOnASingleRow, :)), indicesForRpriorChol );
+gatheredRprioChol = gather(RpriorChol(sub2ind(size(RpriorChol), rowSerialPortionForRpriorChol, colSerialPortionForRpriorChol)));
+
+% Gather wtildePrevious, AtildePrevious
+maxRowOfDistributedArraysToRetrieve = maxLevelOnASingleRow + NUM_PARTITIONS_J;
+[~, indicesForwtildeAndAtilde] = unique(indexMatrix(1:maxRowOfDistributedArraysToRetrieve, :),'first');
+[rowSerialPortionForwtildeAndAtilde, colSerialPortionForwtildeAndAtilde] = ind2sub(size(indexMatrix(1:maxRowOfDistributedArraysToRetrieve, :)), indicesForwtildeAndAtilde );
+% wtildePrevious and AtildePrevious same size, so use one to get linear
+% indices for both
+linearIndicesForwtildeAndAtilde = sub2ind(size(wtildePrevious), rowSerialPortionForwtildeAndAtilde, colSerialPortionForwtildeAndAtilde);
+gatheredwtildePrevious = gather(wtildePrevious(linearIndicesForwtildeAndAtilde));
+gatheredAtildePrevious = gather(AtildePrevious(linearIndicesForwtildeAndAtilde));
 
 
 %% Old stuff below. borrow as needed
