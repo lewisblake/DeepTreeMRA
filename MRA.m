@@ -162,7 +162,12 @@ spmd(NUM_WORKERS)
     end
     
 end
-
+% Progress indicator
+if verbose
+   disp('Parallel section of the posterior complete.');
+   % Serial section of the posterior
+   disp('Calculating the serial section of the posterior ...');
+end
 %% "Serial Section"
 % Now the question becomes what to do with the "serial" portion of the
 % posterior. Want to minimize gathering from workers to clients. Also want
@@ -178,177 +183,36 @@ gatheredRprioChol = gather(RpriorChol(sub2ind(size(RpriorChol), rowSerialPortion
 
 % Gather wtildePrevious, AtildePrevious
 maxRowOfDistributedArraysToRetrieve = maxLevelOnASingleRow + NUM_PARTITIONS_J;
-[~, indicesForwtildeAndAtilde] = unique(indexMatrix(1:maxRowOfDistributedArraysToRetrieve, :),'first');
-[rowSerialPortionForwtildeAndAtilde, colSerialPortionForwtildeAndAtilde] = ind2sub(size(indexMatrix(1:maxRowOfDistributedArraysToRetrieve, :)), indicesForwtildeAndAtilde );
+indexMatrixSubset = indexMatrix(1:maxRowOfDistributedArraysToRetrieve, :);
+[~, indicesForwtildeAndAtilde] = unique(indexMatrixSubset,'first');
+[rowSerialPortionForwtildeAndAtilde, colSerialPortionForwtildeAndAtilde] = ind2sub(size(indexMatrixSubset), indicesForwtildeAndAtilde );
 % wtildePrevious and AtildePrevious same size, so use one to get linear
 % indices for both
 linearIndicesForwtildeAndAtilde = sub2ind(size(wtildePrevious), rowSerialPortionForwtildeAndAtilde, colSerialPortionForwtildeAndAtilde);
 gatheredwtildePrevious = gather(wtildePrevious(linearIndicesForwtildeAndAtilde));
 gatheredAtildePrevious = gather(AtildePrevious(linearIndicesForwtildeAndAtilde));
-
-
-%% Old stuff below. borrow as needed
-for iLevel = 1:NUM_LEVELS_SERIAL_S
-   for jRegion  = (cumulativeRegions(iLevel) - nRegions(iLevel) + 1): cumulativeRegions(iLevel) 
-    % Find the ancestry for this jRegion
-    indexAncestry = find_ancestry(jRegion, nRegions, NUM_PARTITIONS_J);
-    % Create the prior with create_prior() function
-    [thisRpriorChol, thisKcholBchol, ~, ~, ~] = create_prior(theta, ...
-            NUM_LEVELS_M, knotsSerial([indexAncestry;jRegion],1),RpriorCholSerial(indexAncestry,1), ...
-            KcBSerial(indexAncestry,1), [], varEps, []);
-    % Fina quantities that determine where to place thisRpriorChol,
-    % thisKcholBchol into their codistributed arrays
-    [firstRowContainingThisRegion,firstColContainingThisRegion] = find(indexMatrixSubset(:,:)==jRegion, 1 );   
-    nTimesEachIndexIsRepeatedThisRow = ceil(NUM_WORKERS/nRegions(iLevel)); % 1/4 LB: Added ceiling function around to ensure positive integer double    
-    % Place objects from create_prior() in their serial containers
-    RpriorCholSerial{jRegion} = thisRpriorChol;
-    KcBSerial{jRegion} = thisKcholBchol;
-    % Place objects from create_prior in their codistributed array
-    % containers for execution later on
-    RpriorChol(firstRowContainingThisRegion,firstColContainingThisRegion:firstColContainingThisRegion + nTimesEachIndexIsRepeatedThisRow - 1) = {thisRpriorChol};
-    KcB(firstRowContainingThisRegion, firstColContainingThisRegion:firstColContainingThisRegion + nTimesEachIndexIsRepeatedThisRow - 1) = {thisKcholBchol};    
-   end
-
-end
-knotsSubset = []; knotsSerial = []; indexMatrixSubset = []; KcBSerial = []; % To save memory
-if verbose
-   disp('Serial section of the prior complete.');
-   disp('Creating the prior in parallel ...');
-end
-% Finish calculating prior in parallel
-spmd(NUM_WORKERS)
-    % In parallel, loop over indexMatrix rows
-    mCounterIndex = 1;
-    for iRow = lastRowInSerial+1:nTotalRegionsAssignedToEachWorker
-        index = indexMatrix(iRow, labindex);
-        indexAncestry = find_ancestry( index, nRegions, NUM_PARTITIONS_J );
-        % Fill vector with location of indexAncestry in indexMatrix - an area
-        %for optimization
-        indexAncestryInIndexMatrix = nan(length(indexAncestry),1);
-        for k = 1:length(indexAncestry)
-           indexAncestryInIndexMatrix(k) = find(indexMatrix(1:iRow,labindex) == indexAncestry(k)); 
-        end 
-        
-        % Get local part of the objects needed to create the prior
-        knotsLocalPart = getLocalPart(knots([indexAncestryInIndexMatrix;iRow], labindex));        
-        RpriorCholLocalPart = getLocalPart(RpriorChol(indexAncestryInIndexMatrix, labindex));       
-        KcBLocalPart = getLocalPart(KcB(indexAncestryInIndexMatrix, labindex));
-        
-        if index < nRegions(NUM_LEVELS_M) % If not dealing with an index on the finest resolution...
-            % don't send create_prior any data or predictionLocations
-            [thisRpriorChol, thisKcholBchol, ~, ~, ~] = create_prior(theta, ...
-                NUM_LEVELS_M, knotsLocalPart, RpriorCholLocalPart,...
-                KcBLocalPart, [], varEps, []);
-        else
-            dataLocalPart = getLocalPart(outputData(mCounterIndex, labindex));
-            predictionLocationsLocalPart = getLocalPart(predictionLocations(mCounterIndex, labindex));
-            % Create the prior
-            [thisRpriorChol, thisKcholBchol, thisAtj, thiswtj, thisRetLikPred] = create_prior(theta, ...
-                NUM_LEVELS_M, knotsLocalPart, RpriorCholLocalPart,...
-                KcBLocalPart, dataLocalPart{:}, varEps, predictionLocationsLocalPart{:});
-
-            AtildePrevious(iRow, labindex) = {thisAtj};
-            wtildePrevious(iRow, labindex) = {thiswtj};
-            if isPredicting  % If predicting
-                posteriorPredictionMean(mCounterIndex, labindex) = {thisRetLikPred{1}};
-                posteriorPredictionVariance(mCounterIndex, labindex) = {thisRetLikPred{2}};
-                Btilde(mCounterIndex, labindex) = {thisRetLikPred{3}};
-            else % If not predicting
-                logLikelihoodSum = logLikelihoodSum + thisRetLikPred;
-            end     
-            mCounterIndex = mCounterIndex + 1;
-        end
-        RpriorChol(iRow, labindex) = {thisRpriorChol};
-        KcB(iRow, labindex) = {thisKcholBchol};
-    end 
-end
-
-if verbose
-   disp('Parallel section of the prior complete.');
-   disp('Calculating parallel section of the posterior ...');
-end
-
-%% Create the posterior distribution
-lastIndexOfSecondFinestLevel = nRegions(NUM_LEVELS_M)-1;
-lastRowBeforeFinestLevel = find(indexMatrix(:,end)==lastIndexOfSecondFinestLevel);
-spmd(NUM_WORKERS)
-       
-    for iRow = lastRowBeforeFinestLevel:-1:lastRowInSerial+1
-        index = indexMatrix(iRow, labindex);
-        [indexChildren] = find_children(index, nRegions, NUM_PARTITIONS_J);
-        
-        indexChildrenInIndexMatrix = nan(length(indexChildren),1);
-        for k = 1:length(indexChildren)
-        indexChildrenInIndexMatrix(k) = find(indexMatrix(:, labindex) == indexChildren(k));
-        end
-        
-        RpriorCholj = getLocalPart(RpriorChol(iRow, labindex));
-        wtildeChildren = getLocalPart(wtildePrevious(indexChildrenInIndexMatrix, labindex));
-        AtildeChildren = getLocalPart(AtildePrevious(indexChildrenInIndexMatrix, labindex));
-        
-        % Calculate posterior_inference()
-        [ wtildeCurrentj, AtildeCurrentj, logLikelihoodj, ...
-            RposteriorCholj, Kcholwj, KcholAj ] = posterior_inference(RpriorCholj{:}, ...
-            wtildeChildren, AtildeChildren);
-        
-        % LB: changed from wtileCurrent to wtildePrevious. Seems to be
-        % working however need to check back later
-        wtildePrevious(iRow,labindex) = {wtildeCurrentj};
-        AtildePrevious(iRow, labindex) = {AtildeCurrentj};
-        
-        if isPredicting
-            RposteriorChol(iRow, labindex) = {RposteriorCholj};
-            Kcholw(iRow, labindex) = {Kcholwj};
-            KcholA(iRow, labindex) = {KcholAj};
-        else
-            logLikelihoodSum = logLikelihoodSum + logLikelihoodj;
-        end
-    end
-end
-% Gather logLikelikehoodSum - composite object used to trach likelihood in
+% Gather logLikelikehoodSum - composite object used to track likelihood in
 % spmd block
-sumLogLikelihood = 0; % Intialize sumLogLikelihood to collect distributed logLikelihoodSum
+% Intialize sumLogLikelihood to collect distributed logLikelihoodSum
 gatheredSum = gather(logLikelihoodSum);
-for iLikelihood = 1:length(gatheredSum)
-    sumLogLikelihood = sumLogLikelihood + gatheredSum{iLikelihood};
-end
-
-if verbose
-   disp('Parallel section of the posterior complete.');
-   % Serial section of the posterior
-   disp('Calculating the serial section of the posterior ...');
-end
-
-% Find the last index of the children of the level at which we begin
-% computing in serial. These children are regions that are within the
-% parallel portion of computations
-lastIndexOfSerialChildren = nRegions(nLevelToBeginInParallel+1)-1;
-% Get only the row at which the last seruial children entry exists
-[lastRowSerialChildren, ~] = find(indexMatrix(:,:) == lastIndexOfSerialChildren);
-% Select the subset of the indexMatrix, wtildePrevious, and AtildePrevious which contains all serial levels and
-% their children
-indexMatrixSubset = indexMatrix(1:lastRowSerialChildren,:); % Redefine from above to include children ot nLevelsInSerial
-wtildeChildrenSubset = gather(wtildePrevious(1:lastRowSerialChildren,:));
-AtildeChildrenSubset = gather(AtildePrevious(1:lastRowSerialChildren,:));
-% Process AtildePrevious, wtildePrevious for serial computation
-[ AtildePreviousSerial, wtildePreviousSerial ] = process_A_and_w_for_serial(AtildeChildrenSubset, ...
-    wtildeChildrenSubset, indexMatrixSubset, NUM_LEVELS_SERIAL_S, nRegions, NUM_PARTITIONS_J); 
+sumLogLikelihood = sum(cellfun(@sum, gatheredSum(:)));
+gatheredSum = []; % force freeing memory. small so may remove.
 % Loop through remaining regions in serial
-for iLevel = NUM_LEVELS_SERIAL_S:-1:1 % 1/7 LB: changed going from nLevelsInSerial to lastRowInSerial. Actually should be nLevelsInSerial since loop over jRegion
+for iLevel = maxLevelOnASingleRow:-1:1
     for jRegion = (cumulativeRegions(iLevel) - nRegions(iLevel) + 1) : cumulativeRegions(iLevel)
         [ indexChildren ] = find_children( jRegion, nRegions, NUM_PARTITIONS_J );
         % Calculate posterior quantities
-        RpriorCholj = RpriorCholSerial{jRegion};
-        wtildeChildren = wtildePreviousSerial(indexChildren);
-        AtildeChildren = AtildePreviousSerial(indexChildren);
+        RpriorCholj = gatheredRprioChol{jRegion};
+        wtildeChildren = gatheredwtildePrevious(indexChildren);
+        AtildeChildren = gatheredAtildePrevious(indexChildren);
         
         % Calculate posterior_inference()
         [ wtildeCurrentj, AtildeCurrentj, logLikelihoodj, ...
             RposteriorCholj, Kcholwj, KcholAj ] = posterior_inference( RpriorCholj, ...
             wtildeChildren, AtildeChildren );
         
-        wtildePreviousSerial{jRegion} = wtildeCurrentj;
-        AtildePreviousSerial{jRegion} = AtildeCurrentj;
+        gatheredwtildePrevious{jRegion} = wtildeCurrentj;
+        gatheredAtildePrevious{jRegion} = AtildeCurrentj;
         
         [firstRowContainingThisRegion,firstColContainingThisRegion] = find(indexMatrixSubset(:,:)==jRegion, 1 );  
         nTimesEachIndexIsRepeatedThisRow = ceil(NUM_WORKERS/nRegions(iLevel)); % 1/7 LB: added ceil() function around calculation
@@ -364,8 +228,7 @@ for iLevel = NUM_LEVELS_SERIAL_S:-1:1 % 1/7 LB: changed going from nLevelsInSeri
     end
 end
 % Force freeing up of memory
-indexMatrixSubset = []; wtildeChildrenSubset = []; AtildeChildrenSubset = [];
-
+indexMatrixSubset = [];
 if verbose
    disp('Serial section of the posterior complete.');
 end
@@ -382,12 +245,11 @@ if isPredicting
                 % Set up appropriate indicies
                 index = indexMatrix(iRow, labindex);
                 indexAncestry = find_ancestry(index, nRegions,NUM_PARTITIONS_J);
-                % Fill vector with location of indexAncestry in indexMatrix - an area
-                %for optimization
-                indexAncestryInIndexMatrix = nan(length(indexAncestry),1);
-                for k = 1:length(indexAncestry)
-                    indexAncestryInIndexMatrix(k) = find(indexMatrix(1:iRow,labindex) == indexAncestry(k));
-                end
+                
+                % Fill vector with location of indexAncestry in indexMatrix
+                indexAncestryInIndexMatrixBool = ismember(indexMatrix(1:iRow, labindex), indexAncestry); % LB: this should work because the indices of the sub matrix do not change as we go down from top to bottom. Doesn't work when the submatrix goes from bottom to top in creating the posterior
+                indexAncestryInIndexMatrix = find(indexAncestryInIndexMatrixBool ~= 0); % keep only nonzeros which correspond to the indices of indexAncestry in indexMatrix    
+        
                 % Collect the appropriate inputs to make predictions at
                 % this region
                 thisPosteriorPredictionMean = getLocalPart(posteriorPredictionMean(mCounterIndex, labindex));
