@@ -78,9 +78,8 @@ if verbose
    disp('Creating the prior in parallel ...')
 end
 %% Main spmd block to create prior and parallel portion of posterio
-
 spmd(NUM_WORKERS)
-    % First part of the MRA algorithm: Create prior from "coarsest to finest"
+    %% First part of the MRA algorithm: Create prior from "coarsest to finest"
     mCounterIndex = 1; % LB: potential room for optimization.
     for iRow = 1 :  nTotalRegionsAssignedToEachWorker
         indexCurrent = indexMatrix(iRow, labindex);
@@ -126,10 +125,8 @@ spmd(NUM_WORKERS)
         disp('Prior calculation complete.');
         disp('Creating the prior in parallel ...');
     end
-end
-%% The above end and below spmd call are temp4dev.
-spmd(NUM_WORKERS)
-    % Second part of MRA: Caclulate the poster from "finest to coarsest".
+
+    %% Second part of MRA: Caclulate the poster from "finest to coarsest".
     for iRow = lastRowBeforeFinestLevel:-1:maxLevelOnASingleRow
         index = indexMatrix(iRow, labindex);
         [indexChildren] = find_children(index, nRegions, NUM_PARTITIONS_J);

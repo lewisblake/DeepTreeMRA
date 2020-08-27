@@ -31,7 +31,7 @@ offsetPercentage = 0.01; % Offset percentage from partition boundaries. Default 
 NUM_WORKERS = 4; % Number of workers in parallel pool. Default is 4.
 NUM_LEVELS_SERIAL_S = 4; % Number of levels to compute in serial. Default is ??.
 resultsFilePath = './Results/';  % By default, results from all routines are saved in the Results folder.
-verbose = false; % Boolean variable indicating whether to display progress indicators. Default is true.
+verbose = true; % Boolean variable indicating whether to display progress indicators. Default is true.
 
 %% Inputs relevant if calculationType = 'prediction'.
 % That is, these inputs are only used in prediction mode.

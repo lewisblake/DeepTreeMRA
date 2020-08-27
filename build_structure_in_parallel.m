@@ -1,5 +1,5 @@
 function [ knots, partitions, nRegions, outputData, predictionLocations, indexMatrix ] = build_structure_in_parallel( NUM_LEVELS_M, ...
-    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, varargin )
+    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, verbose, varargin )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% Check inputs and display progress check
@@ -10,9 +10,11 @@ if numVarArgs > 2
     error('myfuns:build_structure:TooManyInputs', ...
         'requires at most 2 optional inputs');
 end
-% Display progress check
-disp('Begining to build hierarchical grid structure in parallel...');
 
+if verbose
+    % Display progress check
+    disp('Begining to build hierarchical grid structure in parallel...');
+end
 % Optional argument that can be passed is data
 optArgs(1:numVarArgs) = varargin;
 [ data, predictionVector ] = optArgs{:};
@@ -170,5 +172,7 @@ spmd(NUM_WORKERS)
     end
     
 end
-% Progress indicator
-disp('Building the hierarchical structure complete.')
+if verbose
+    % Progress indicator
+    disp('Building the hierarchical structure complete.')
+end
