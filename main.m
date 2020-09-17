@@ -14,11 +14,12 @@ function [elapsedTime] = main()
 % Documentation in these scripts will make references to Katzfuss, 2017.
 %% Set up parallel pool - temproary for development
 
-if isempty(gcp) % If there is no current parallel pool
-    parpool(NUM_WORKERS) % Create parallel pool on default cluster of size NUM_WORKERS
+%if isempty(gcp) % If there is no current parallel pool
+    %parpool(NUM_WORKERS) % Create parallel pool on default cluster of size NUM_WORKERS
     %poolobj = gcp;
     %addAttachedFiles(poolobj, {'find_ancestry.m', 'build_structure_in_parallel.m'} ) % can I add all files at once?
-end
+%end
+
 
 %% User Input
 % Run user_input.m script to get variables into workspace
