@@ -18,18 +18,18 @@ clear all; %addpath('subroutines');
 % Choose dataSource. Set to be a char corresponding to a case within the
 % switch clause of load_data.m
 % Included data sets are 'satellite' and 'simulated'.
-dataSource = 'satellite'; % Default is 'satellite'.
+dataSource = 'modisSST'; % Default is 'satellite'.
 % Choose calculationType: | 'prediction | 'optimize' | 'likelihood' |
-calculationType = 'likelihood'; % Default is likelihood.
+calculationType = 'prediction'; % Default is likelihood.
 %% Inputs relevant for any calculationType
 % Below are the choices for M, J, and r as denoted in Katzfuss 2017.
 % To estimate NUM_LEVELS_M, see find_num_levels_suggested_required.m. J must either be 2 or 4.
-NUM_LEVELS_M = 9; % Total number of levels. Set to be a natural number. Default is 9.
+NUM_LEVELS_M = 18; % Total number of levels. Set to be a natural number. Default is 9.
 NUM_PARTITIONS_J = 2; % Number of partitions of each region at each level. Must be 2 or 4. Default is 2.
 NUM_KNOTS_r = 64; % Number of knots per partition. Default is 64.
 offsetPercentage = 0.01; % Offset percentage from partition boundaries. Default is 0.01.
-NUM_WORKERS = 4; % Number of workers in parallel pool. Default is 4.
-NUM_LEVELS_SERIAL_S = 4; % Number of levels to compute in serial. Default is ??.
+NUM_WORKERS = 128; % Number of workers in parallel pool. Default is 4.
+NUM_LEVELS_SERIAL_S = 8; % Number of levels to compute in serial. Default is ??.
 resultsFilePath = './Results/';  % By default, results from all routines are saved in the Results folder.
 verbose = false; % Boolean variable indicating whether to display progress indicators. Default is true.
 

@@ -1,5 +1,5 @@
-% Start cluster
-cluster = parcluster('NCAR Cheyenne - R2018a')
+% Start clustervv
+cluster = parcluster('cheyenne-R2020a_premium')
 
 % Create Communcaiting Jobs
 j1 = createCommunicatingJob(cluster);
