@@ -45,16 +45,16 @@ switch calculationType
     case 'optimize'        
         %% Optimize
         isPredicting = false;
-        fun = @(thetaOpt)MRA([thetaOpt(1) thetaOpt(2)], outputData, knots, ...
-            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, thetaOpt(3));
+        fun = @(thetaOpt)MRA([thetaOpt(1) thetaOpt(2) thetaOpt(3)], outputData, knots, ...
+            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, thetaOpt(4));
         % Dummy values required by optimization routine
         A = []; b = []; Aeq = []; beq = [];
         % fmincon() optimizes over the bounds set
         tic; x = fmincon(fun, initalEstimate, A, b, Aeq, beq, lowerBound, upperBound);
         elapsedTime = toc;  % Unsuppress output to print to command window
         % Assign values from optimization to theta and varEps
-        theta = [x(1) x(2)];
-        varEps = x(3);
+        theta = [x(1) x(2) x(3)];
+        varEps = x(4);
         % Save optimize results
         save([resultsFilePath, 'Optimization_Results'], 'theta', 'varEps');
     case 'prediction'

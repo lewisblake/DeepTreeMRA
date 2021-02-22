@@ -13,14 +13,14 @@
 % Documentation in this codebase will make references to Katzfuss, 2017.
 
 %% Workspace cleanup and add file path to subroutines
-clear all; %addpath('subroutines');
+clear; %addpath('subroutines');
 %% User Input: dataSource and calculationType
 % Choose dataSource. Set to be a char corresponding to a case within the
 % switch clause of load_data.m
 % Included data sets are 'satellite' and 'simulated'.
 dataSource = 'simulated'; % Default is 'satellite'.
 % Choose calculationType: | 'prediction | 'optimize' | 'likelihood' |
-calculationType = 'likelihood'; % Default is likelihood.
+calculationType = 'optimize'; % Default is likelihood.
 %% Inputs relevant for any calculationType
 % Below are the choices for M, J, and r as denoted in Katzfuss 2017.
 % To estimate NUM_LEVELS_M, see find_num_levels_suggested_required.m. J must either be 2 or 4.
@@ -45,6 +45,7 @@ plotsFilePath = './Plots/'; % By default, plots are saved in Plots folder.
 
 %% Inputs relevant if calculationType = 'optimize'
 % Limits and initial values for parameter search
-lowerBound = [0,0,0]; % Default is [0,0,0].
-upperBound = [10,1,5]; % Default is [10,1,5].
-initalEstimate = [5,0.3,0.1]; % Default is [5, 0.3, 0.1].
+% bounds are in the order of [sigma^2, beta, nu, varEps]
+lowerBound = [0, 0, 0, 0]; % Default is [0, 0, 0, 0].
+upperBound = [3, 1, 2, 0.1]; % Default is [10, 1, 3, 1].
+initalEstimate = [1, 0.3, 1, 0.01]; % Default is [5, 0.3, 1, 0.1].

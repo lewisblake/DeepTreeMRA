@@ -10,6 +10,19 @@ function R = evaluate_covariance( locs1, locs2, theta )
 % Calculate the pairwise distance, h, and divide (scale) by the second entry of theta
 % Let the covariance matrix be the first parameter of theta mutliplied by an exponential
 % determined by h
-R = theta(1) * exp(-pdist2(locs1, locs2)/theta(2)); % nu=1/2 exponential
+smoothness_nu = theta(3);
+dist_scaled = pdist2(locs1, locs2)/theta(2);
+
+if smoothness_nu == 0.5
+    R = theta(1) * exp(-dist_scaled); % nu=1/2 exponential
+elseif smoothness_nu == 1.5
+    R = theta(1) * (1 + (sqrt(3)*dist_scaled)) * exp(-sqrt(3)*dist_scaled);
+elseif smoothness_nu == 2.5
+    R = theta(1) * (1 + (sqrt(5)*dist_scaled) + ((5/3)*dist_scaled^2)) * exp(-sqrt(5)*dist_scaled);
+else
+    not_zero = (dist_scaled ~= 0.0);
+    R = theta(1) * ones(size(dist_scaled));
+    R(not_zero) = theta(1) * (2^(1-smoothness_nu)/gamma(smoothness_nu)) * (dist_scaled(not_zero)).^smoothness_nu .* besselk(smoothness_nu, dist_scaled(not_zero));
+end
 
 end
