@@ -46,7 +46,7 @@ switch calculationType
         %% Optimize
         isPredicting = false;
         fun = @(thetaOpt)MRA([thetaOpt(1) thetaOpt(2)], outputData, knots, ...
-            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, nLevelsInSerial, NUM_WORKERS, verbose, thetaOpt(3));
+            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_LEVELS_SERIAL_S,, NUM_WORKERS, verbose, thetaOpt(3));
         % Dummy values required by optimization routine
         A = []; b = []; Aeq = []; beq = [];
         % fmincon() optimizes over the bounds set
@@ -62,7 +62,7 @@ switch calculationType
         isPredicting = true;
         tic;
         [ ~, predictions ] = MRA(theta, outputData, knots, ...
-            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, nLevelsInSerial, NUM_WORKERS, verbose, varEps, predictionLocations);
+            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_LEVELS_SERIAL_S, NUM_WORKERS, verbose, varEps, predictionLocations);
         elapsedTime = toc;  % Unsurpress output to print to command window
         % Reformat data for plotting:     
         % Collect the distributed predictions, stack them on top of each

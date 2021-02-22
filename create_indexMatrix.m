@@ -1,4 +1,4 @@
-function [indexMatrix] = create_indexMatrix(NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVELS_IN_SERIAL_S)
+function [indexMatrix] = create_indexMatrix(NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVELS_SERIAL_S)
 %% Create the indexMatrix
 %  Input: NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, nWorkersUsed, nTotalRegionsAssignedToEachWorker
 %  nLevelsInSerial, 
@@ -6,10 +6,10 @@ function [indexMatrix] = create_indexMatrix(NUM_LEVELS_M, NUM_PARTITIONS_J, nReg
 %  Output: indexMatrix
 %
 
-nLevelToBeginParallel = NUM_LEVELS_IN_SERIAL_S +1;
+nLevelToBeginParallel = NUM_LEVELS_SERIAL_S +1;
 % Calculate necessary quantities
 cummulativeRegions = cumsum(nRegions);
-vecOfRegionsAtFirstParallelLevel = nRegions(NUM_LEVELS_IN_SERIAL_S+1):cummulativeRegions(NUM_LEVELS_IN_SERIAL_S+1);
+vecOfRegionsAtFirstParallelLevel = nRegions(NUM_LEVELS_SERIAL_S+1):cummulativeRegions(NUM_LEVELS_SERIAL_S+1);
 matrixOfRegionsAtFirstParallelLevel = reshape(vecOfRegionsAtFirstParallelLevel, [], NUM_WORKERS);
 % Calculate quantities needed for nTotalRegionsAssignedToEachWorker
 maxLevelOnASingleRow = sum(nRegions <= NUM_WORKERS); % How many times indices from a level are assigned to a worker
@@ -22,8 +22,9 @@ indexMatrix = nan(nTotalRegionsAssignedToEachWorker, NUM_WORKERS);
 % Loop through all workers
 for iWorker = 1:NUM_WORKERS   
     if NUM_WORKERS == length(vecOfRegionsAtFirstParallelLevel)%length(vectorOfRegionsAtNLevelsInSerial) 
+        disp('num workers is equal to num regions at level which we distribute objects')
         indexMatrix(nLevelToBeginParallel, iWorker) = vecOfRegionsAtFirstParallelLevel(iWorker); % Regions above will not take vertical space in indexMatrix
-        indexMatrix(1:NUM_LEVELS_IN_SERIAL_S, iWorker) = find_ancestry(indexMatrix(nLevelToBeginParallel,  iWorker), nRegions, NUM_PARTITIONS_J);
+        indexMatrix(1:NUM_LEVELS_SERIAL_S, iWorker) = find_ancestry(indexMatrix(nLevelToBeginParallel,  iWorker), nRegions, NUM_PARTITIONS_J);
         indexMatrix(nLevelToBeginParallel:end, iWorker) = find_branch_children(indexMatrix(nLevelToBeginParallel, iWorker), nRegions, NUM_PARTITIONS_J, NUM_LEVELS_M);
         
     elseif NUM_WORKERS > length(vecOfRegionsAtFirstParallelLevel) % Report error
