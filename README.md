@@ -67,6 +67,7 @@ In `user_input.m`, the areas requiring user input are as follows:
     - In order to use a different data set, see the section of `load_data.m` below and feed the case string for the data used to `dataSource` in `user_input.m`.
 
 * `calculationType`: | `"prediction"` | `"optimize"` | `"likelihood"` | `"build_structure"` |
+
 Default is `"likelihood"`.
 `calculationType` can be set to any of the following calculation modes:
 	- `"prediction"`: Uses given values for the parameters (`theta` and `varEps`) and just conducts spatial prediction. Parameters can be changed in `load_data.m`	
@@ -147,7 +148,7 @@ Values can determined by the `"optimize"` mode. For the `"satellite"` and `"simu
 `evaluate_covariance()` is a general covariance function. By default, it is set as an exponential and can be changed here.
 
 
-## OUTPUT:
+## Output:
 
 Model output is dependent on the `calculationType` (computational mode) performed. 
 
