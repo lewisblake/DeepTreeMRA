@@ -26,14 +26,14 @@ function [elapsedTime] = main()
 user_input;
 
 %% Validate User Input
-validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath);
+validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath);
 
 %% Data Processing: Load data using load_data() function
 [ data, regressionModel, domainBoundaries, predictionVector, theta, varEps ] = load_data(dataSource, nXGrid, nYGrid, offsetPercentage);
 
 %% Build hierarchical grid structure using build_structure_in_parallel() function
 [ knots, ~, nRegions, outputData, predictionLocations, indexMatrix ] = build_structure_in_parallel( NUM_LEVELS_M, ...
-    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, verbose, data(:,1:3), predictionVector );
+    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, verbose, data(:,1:3), predictionVector );
 
 %% Switch clause for calculationType
 switch calculationType
@@ -46,7 +46,7 @@ switch calculationType
         %% Optimize
         isPredicting = false;
         fun = @(thetaOpt)MRA([thetaOpt(1) thetaOpt(2)], outputData, knots, ...
-            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_LEVELS_SERIAL_S,, NUM_WORKERS, verbose, thetaOpt(3));
+            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, thetaOpt(3));
         % Dummy values required by optimization routine
         A = []; b = []; Aeq = []; beq = [];
         % fmincon() optimizes over the bounds set
@@ -62,7 +62,7 @@ switch calculationType
         isPredicting = true;
         tic;
         [ ~, predictions ] = MRA(theta, outputData, knots, ...
-            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_LEVELS_SERIAL_S, NUM_WORKERS, verbose, varEps, predictionLocations);
+            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, varEps, predictionLocations);
         elapsedTime = toc;  % Unsurpress output to print to command window
         % Reformat data for plotting:     
         % Collect the distributed predictions, stack them on top of each
@@ -84,7 +84,7 @@ switch calculationType
         isPredicting = false;
         tic;
         [ sumLogLikelihood ] = MRA(theta, outputData, knots, ...
-            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_LEVELS_SERIAL_S, NUM_WORKERS, verbose, varEps);  % Unsuppress output to print to command window
+            NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, varEps);  % Unsuppress output to print to command window
         elapsedTime = toc; % Unsuppress output to print to command window
         if verbose % Display the sumLogLikelihood
             disp('sumLogLikelihood:');

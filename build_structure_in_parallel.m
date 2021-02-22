@@ -1,5 +1,5 @@
 function [ knots, partitions, nRegions, outputData, predictionLocations, indexMatrix ] = build_structure_in_parallel( NUM_LEVELS_M, ...
-    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVELS_SERIAL_S, verbose, varargin )
+    NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, verbose, varargin )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% Check inputs and display progress check
@@ -53,7 +53,7 @@ nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.
 
 
 %% Create matrix to store continuous index for all regions
-[indexMatrix] = create_indexMatrix( NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVELS_SERIAL_S);
+[indexMatrix] = create_indexMatrix( NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P);
 % Find the index within the indexMatrix corresponding to the finest level at which the knots are not set to the data.
 indexOfFinestKnotLevelWithinIndexMatrix = find(indexMatrix(:,end) == indexEndFinestKnotLevel);
 %nRowsWithRepeatedEntriesInIndexMatrix = sum(nRegions < NUM_WORKERS);
@@ -83,7 +83,7 @@ knots(1,1:NUM_WORKERS) = {[knotsX(:), knotsY(:)]}; % Knots at coarsest resolutio
 % region
 partitions(1,1:NUM_WORKERS) = {[ xMin, xMax, yMin, yMax ]};
 
-vectorOfRegionsAtFirstParallelLevel = cummulativeRegions(NUM_LEVELS_SERIAL_S+1) - nRegions(NUM_LEVELS_SERIAL_S+1) +1 : cummulativeRegions(NUM_LEVELS_SERIAL_S+1);
+vectorOfRegionsAtFirstParallelLevel = cummulativeRegions(NUM_LEVEL_ASSIGN_REGIONS_P) - nRegions(NUM_LEVEL_ASSIGN_REGIONS_P) +1 : cummulativeRegions(NUM_LEVEL_ASSIGN_REGIONS_P);
 matrixOfRegionsAtFirstParallelLevel = reshape(vectorOfRegionsAtFirstParallelLevel, [], NUM_WORKERS);
 %% Loop creating partitions and placing knots
 spmd(NUM_WORKERS)

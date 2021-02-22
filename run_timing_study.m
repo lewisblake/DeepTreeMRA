@@ -1,5 +1,5 @@
 % Start clustervv
-cluster = parcluster('cheyenne-R2020a_premium')
+cluster = parcluster('cheyenne-R2020a')
 
 % Create Communcaiting Jobs
 j1 = createCommunicatingJob(cluster);

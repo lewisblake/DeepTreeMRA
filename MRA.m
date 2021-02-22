@@ -1,5 +1,5 @@
 function [ sumLogLikelihood, predictions ] = MRA( theta, outputData, knots, ...
-    NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_LEVELS_SERIAL_S, NUM_WORKERS, verbose, varargin)
+    NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, varargin)
 %% MRA.m is the main Multi-resolution approximation function
 %
 % Input: theta, data, knots, MAX_LEVEL_M, NUM_PARTITIONS_J, nRegions, varargin
@@ -20,18 +20,18 @@ optionalArguments(1 : numVarArgsIn) = varargin;
 % Calculate key quantities
 %totalRegions = sum(nRegions);
 cumulativeRegions = cumsum(nRegions);
-nLevelToBeginInParallel = NUM_LEVELS_SERIAL_S + 1;
+%nLevelToBeginInParallel = NUM_LEVELS_SERIAL_S + 1;
 logLikelihoodSum = 0;
 nRegionsAtFinestLevelForEachWorker = (nRegions(NUM_LEVELS_M)/NUM_WORKERS);
 % 1/7 LB: Calculate quantities needed for nTotalRegionsAssignedToEachWorker
 maxLevelOnASingleRow = sum(nRegions <= NUM_WORKERS); % How many times indices from a level are assigned to a worker
 counter = 1:(NUM_LEVELS_M - maxLevelOnASingleRow);
 nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.^counter);
-nTotalRegionsInSerial = cumulativeRegions(NUM_LEVELS_SERIAL_S);
+%nTotalRegionsInSerial = cumulativeRegions(NUM_LEVELS_SERIAL_S);
 lastIndexOfSecondFinestLevel = nRegions(NUM_LEVELS_M)-1;
 lastRowBeforeFinestLevel = find(indexMatrix(:,end)==lastIndexOfSecondFinestLevel);
-lastIndexOfSerialLevel = nRegions(NUM_LEVELS_SERIAL_S+1)-1;
-[lastRowInSerial, ~] = find(indexMatrix(:,:) == lastIndexOfSerialLevel,1);
+%lastIndexOfSerialLevel = nRegions(NUM_LEVELS_SERIAL_S+1)-1;
+%[lastRowInSerial, ~] = find(indexMatrix(:,:) == lastIndexOfSerialLevel,1);
 
 
 %% Pre-allocate space for codistributed arrays
