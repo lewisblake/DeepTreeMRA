@@ -164,4 +164,4 @@ If verbose is set to true, the log-likelihood will print to the Command Window a
 
 4) For the `"build_structure"` mode, summary statistics of the distribution of observations to regions at the finest resolution are reported within '/Results/structureSummaryStats.txt'. A histogram is also produced within the Plots folder.
 
-The code is set up assuming Unix-like file paths for saving ad plotting.
+The code is set up assuming Unix-like file paths for saving and plotting.
