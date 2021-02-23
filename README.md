@@ -68,12 +68,11 @@ In `user_input.m`, the areas requiring user input are as follows:
 
 * `calculationType`: | `"prediction"` | `"optimize"` | `"likelihood"` | `"build_structure"` |
 
-Default is `"likelihood"`.
-`calculationType` can be set to any of the following calculation modes:
-	- `"prediction"`: Uses given values for the parameters (`theta` and `varEps`) and just conducts spatial prediction. Parameters can be changed in `load_data.m`	
-	- `"optimize"`: Optimizes over the range, variance and measurement error. The range and variance parameters are stored as a vector: `theta`. The measurement error is stored as a double: `varEps`.	
-	- `"likelihood"`: Calculates the log-likelihood.
-	- `"build_structure"`: Builds the multi-resolution structure. Reports summary statistics and produces a histogram of the number of observations assigned to regions at the finest resolution.
+Default is `"likelihood"`.`calculationType` can be set to any of the following calculation modes:
+*  `"prediction"`: Uses given values for the parameters (`theta` and `varEps`) and just conducts spatial prediction. Parameters can be changed in `load_data.m`	
+* `"optimize"`: Optimizes over the range, variance and measurement error. The range and variance parameters are stored as a vector: `theta`. The measurement error is stored as a double: `varEps`.	
+* `"likelihood"`: Calculates the log-likelihood.
+* `"build_structure"`: Builds the multi-resolution structure. Reports summary statistics and produces a histogram of the number of observations assigned to regions at the finest resolution.
 
 #### User Input relevant for any `calculationType`:
 
@@ -113,11 +112,11 @@ By default plots are saved in the `Plots` folder.
 
 #### User inputs relevant if calculationType = 'optimize'
 
-* `lowerBound`: Vector of lower-bound values required for the optimization search. Default is [0,0,0].
+* `lowerBound`: Vector of lower-bound values required for the optimization search. Default is [0, 0, 0, 0].
 
-* `upperBound`: Vector of upper-bound values required for the optimization search. Default is [10,1,5].
+* `upperBound`: Vector of upper-bound values required for the optimization search. Default is [10, 1, 3, 1].
 
-* `initialEstimate`: Vector of inital estimates of parameteres required for the optimization search. Default is [5, 0.3, 0.1].
+* `initialEstimate`: Vector of inital estimates of parameteres required for the optimization search. Default is [5, 0.3, 1, 0.1].
 
 ## <a name = "additional_user_input"></a> Additional User Input
 
