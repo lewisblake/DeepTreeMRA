@@ -39,7 +39,7 @@ These files are contained within the `Data` folder.
 Both of these data sets were originally used in [Heaton, M.J., Datta, A., Finley, A.O. et al. JABES (2018).](https://doi.org/10.1007/s13253-018-00348-w)
 
 
-## <a name = "parallelization"></a> Paralleization:
+## <a name = "parallelization"></a> Parallelization:
 
 A significant benefit of the MRA is that it lends itself to execution in parallel. 
 For this reason, creation of the prior, most of the posterior inference, and spatial prediction in this codebase are designed to run in parallel using `spmd`. 
