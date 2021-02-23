@@ -137,14 +137,14 @@ case "myData"
 theta = [2, 1]; varEps = 0.01;
 ```
 
-Input data are assumed to have three columns 'lon', 'lon', and 'obs' denoting longitude, latitude, and the observations. For other data, the code in `load_data.m` may be modified or coerced from their native format into variables with those names.
+Input data are assumed to have three columns 'x', 'y', and 'values'. For other data, the code in `load_data.m` may be modified or coerced from their native format into variables with those names.
 
 The user can also change the values of `theta` and `varEps` in `load_data.m`.
 Values can determined by the `"optimize"` mode. For the `"satellite"` and `"simulated"` data provided, those values as determined by the `"optimize"` mode are set as the default values.
 
 ### `evaluate_covariance.m` 
 
-`evaluate_covariance()` is a general covariance function. By default, it is set as an exponential and can be changed here.
+`evaluate_covariance()` is set up as a Matérn covariance function. Some closed forms for special choices the smoothness parameter (i.e., 0.5, 1.5, and 2.5) are hardcoded to avoid evaluating Bessel functions, although in principle any smoothness parameter may be used. If another covariance function is desired, the code can be modified here. The default smoothness for the included data sets is 0.5, corresponding to an exponential covariance.  
 
 
 ## Output:
