@@ -1,5 +1,7 @@
 # Deep Tree MRA - A Parallel Implementation of the Multi-Resolution Approximation for High Performance Computing Environments
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 ### Software authors:
 *	Lewis Blake, Colorado School of Mines (lblake@mines.edu).
 *	Dorit Hammerling, Colorado School of Mines (hammerling@mines.edu).
@@ -24,13 +26,11 @@ The `main.m` script runs the model.
 Within the Matlab Editor Tab, selecting the 'Run' button from `main.m` will execute the code.
 
 
-The repository is structured as follows: 
-The repositiory contains all files required to run the code.
-Within the `Distributed MRA` folder, there are four other folders: `Data`, `Plots`, `Results`, and `subroutines`.
+The repository contains all files required to run the code.
+Within the repository, there are three other folders: `Data`, `Plots`, and `Results`.
 The `Data` folder contains example data sets. 
 The `Results` folder is the default folder for results to be saved. Initially empty. 
 The `Plots` folder is the default folder for spatial prediction plots to be saved. Initially empty.
-The `subroutines` folder contains the functions used to execute the model which are called from `main.m`.
 
 ## Example Data
 
@@ -42,12 +42,12 @@ Both of these data sets were originally used in [Heaton, M.J., Datta, A., Finley
 ## <a name = "parallelization"></a> Paralleization:
 
 A significant benefit of the MRA is that it lends itself to execution in parallel. 
-For this reason, the portions of the creation of the prior, portions of the posterior inference, and spatial prediction in this codebase were designed to run in parallel using `spmd`. 
+For this reason, creation of the prior, most of the posterior inference, and spatial prediction in this codebase are designed to run in parallel using `spmd`. 
 Within `user_input.m`, users can specify the number of workers in the parallel pool by setting `NUM_WORKERS`. 
 SPMD blocks throughout the code will execute in parallel using `NUM_WORKERS` workers.
 Within the Matlab Cluster Profile Manager, the user can specify the desired cluster settings.
 These settings include the number of nodes, nmber of cores, number of MPI processes, wall times, and many others.
-For further reference please see https://www.mathworks.com/help/distcomp/discover-clusters-and-use-cluster-profiles.html .
+For further reference please see [the Matlab documentation](https://www.mathworks.com/help/distcomp/discover-clusters-and-use-cluster-profiles.html). The code was tested on the National Center for Atmospheric Research's (NCAR) supercomputer [Cheyenne](https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne). The Computational & Information Systems Lab (CISL) also has an informative introduction to parallel computing with Matlab that may be of interest to some users [here](https://www2.cisl.ucar.edu/resources/matlab-parallel-computing-toolbox-cheyenne).  
 
 ## Preliminaries:
 
@@ -86,7 +86,7 @@ Default is `"likelihood"`.`calculationType` can be set to any of the following c
 This quantity determines the buffer between the boundaries of a region where knots can be placed.
 `offsetPercentage` is also used at the coarsest resolution to extend the maximal x and y domain boundaries as to include data points that may be exactly on the boundary within a region. The domain boundaries define a rectangular region determined by the minimal and maximal x and y coordinate locations. Preferably set `offsetPercentage` to be a small number (e.g. 0.01).
 
-* `NUM_WORKERS`: Number of workers in the parallel pool. Must be set to be a power of J <= nRegions(nLevelsInSerial). See [Parallelization](#parallelization) above. Default is 4.
+* `NUM_WORKERS`: Number of workers in the parallel pool. Must be set to be a power of J <= nRegions(NUM_LEVEL_ASSIGN_REGIONS_P). See [Parallelization](#parallelization) above. Default is 4.
 
 * `NUM_LEVEL_ASSIGN_REGIONS_P`: The level at which regions are assigned across workers. This determines how much for the hierarchical domain paritioning each worker is assigned. Default is 3.
 
@@ -104,13 +104,15 @@ Set to be a string (e.g. `resultsFilesPath = '/Users/JerryGarcia/Desktop/';`). B
 * `nXGrid`: Number of prediction grid points in x-direction. By default set to 200.
 * `nYGrid`: Number of prediction gridpoints in y-direction. By default set to 200.
 (Note: These parameters define a `nXGrid` x `nYGrid` prediction grid of spatial prediction locations if predicting.
-The prediction grid is only defined within rectangular region given by the domain boundaries discussed above.)
+The prediction grid is only defined within rectangular region given by the domain boundaries discussed above. If desired, a test of predefined test locations can be chosen by setting the `predictionVestor` variable to these locations in an alagous format to that already in `load_data.m`.)
 
 * `plotsFilePath`: Optional file path to save prediction plots if plotting.
 Set to be a string (e.g.`plotsFilesPath = '/Users/JerryGarcia/Figures/';`).
 By default plots are saved in the `Plots` folder.
 
 #### User inputs relevant if calculationType = 'optimize'
+
+The format for each of the following parameter vector bounds is [sigma^2, beta, smoothness_nu, varEps] where sigma^2 is the partial sill, beta is the range paramter, smoothness_nu is the Matérn smoothness parameter, and varEps is the nugget.
 
 * `lowerBound`: Vector of lower-bound values required for the optimization search. Default is [0, 0, 0, 0].
 
