@@ -1,6 +1,8 @@
 function [ indexChildren ] = find_child( index, nRegions, NUM_PARTITIONS_J )
-%UNTITLED7 Summary of this function goes here
-%   Detailed explanation goes here
+% FIND_CHILDREN
+%   this function finds the children regions for a given region.
+%   That is, for a given region, it finds the indices of paritions of the
+%   given region at finer resolutions.
         [ level, tile ] = find_level_tile( index, nRegions );
         levelChildren = level + 1;
         tileChildren=(NUM_PARTITIONS_J * (tile-1) + 1) : (NUM_PARTITIONS_J * tile);

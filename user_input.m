@@ -18,9 +18,9 @@ clear; %addpath('subroutines');
 % Choose dataSource. Set to be a char corresponding to a case within the
 % switch clause of load_data.m
 % Included data sets are 'satellite' and 'simulated'.
-dataSource = 'simulated'; % Default is 'satellite'.
+dataSource = "satellite"; % Default is 'satellite'.
 % Choose calculationType: | 'prediction | 'optimize' | 'likelihood' |
-calculationType = 'optimize'; % Default is likelihood.
+calculationType = "likelihood"; % Default is likelihood.
 %% Inputs relevant for any calculationType
 % Below are the choices for M, J, and r as denoted in Katzfuss 2017.
 % To estimate NUM_LEVELS_M, see find_num_levels_suggested_required.m. J must either be 2 or 4.
@@ -41,7 +41,7 @@ nXGrid = 200; % Number of prediction grid points in x-direction. Only required f
 nYGrid = 200; % Number of prediction grid points in y-direction. Only required for 'prediction' calculationType. Default is 200.
 % Optional: select file paths to save plots if
 % predicting. e.g. resultsFilesPath = '/Users/JerryGarcia/Desktop/';
-plotsFilePath = './Plots/'; % By default, plots are saved in Plots folder.
+plotsFilePath = "./Plots/"; % By default, plots are saved in Plots folder.
 
 %% Inputs relevant if calculationType = 'optimize'
 % Limits and initial values for parameter search

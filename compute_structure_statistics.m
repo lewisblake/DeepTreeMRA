@@ -19,7 +19,7 @@ spmd(NUM_WORKERS)
     meanNumObsThisWorker = mean(numObs);
     stdNumObsThisWorker = std(numObs);
     medianNumObsThisWorker = median(numObs);
-    numZerosThisWorker = length(numObs) - nnz(numObs); % LB 3/17: this needs to be tested
+    numZerosThisWorker = length(numObs) - nnz(numObs);
 end
 
 % Gather summary statistics from all workers

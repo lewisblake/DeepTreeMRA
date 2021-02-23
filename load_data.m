@@ -14,7 +14,7 @@ switch dataSource
         load('./Data/satelliteData.mat')
         
         % Values of parameters of covariance function [sigma^2, beta, nu]
-        theta = [5.57,0.12, 0.5]; varEps = 0.01;
+        theta = [5.57, 0.12, 0.5]; varEps = 0.01;
         
     case 'simulated'
         %% User Input
@@ -22,7 +22,7 @@ switch dataSource
         load('./Data/simulatedData.mat')
         
         % Values of parameters of covariance function [sigma^2, beta, nu]
-        theta = [8.13,0.72, 0.5]; varEps = 0.1;
+        theta = [8.13, 0.72, 0.5]; varEps = 0.1;
         
     otherwise
         error('Error. Specified datType is not a valid data set.');

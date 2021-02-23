@@ -58,12 +58,8 @@ for iLevel = 1 : currentLevel
         % Add diagonal matrix of varEps
         V{iLevel} = V{iLevel} + diag(linspace(varEps,varEps,size(V{iLevel},1)));
         % Ensure PD with nearestSPD()
-        %V{iLevel} = nearestSPD(V{iLevel});
         % Compute the Cholesky decompositon for R_prior
         RpriorCholj = chol(V{iLevel}, 'lower');
-        
-        % Add diagonal matrix of varEps
-        %RpriorCholj = RpriorCholj + diag(linspace(varEps,varEps,size(RpriorCholj,1)));
         
     end
 end

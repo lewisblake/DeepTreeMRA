@@ -20,7 +20,7 @@ indexMatrix = nan(nTotalRegionsAssignedToEachWorker, NUM_WORKERS);
 
 % Loop through all workers
 for iWorker = 1:NUM_WORKERS   
-    if NUM_WORKERS == length(vecOfRegionsAtFirstParallelLevel)%length(vectorOfRegionsAtNLevelsInSerial) 
+    if NUM_WORKERS == length(vecOfRegionsAtFirstParallelLevel) 
         indexMatrix(NUM_LEVEL_ASSIGN_REGIONS_P, iWorker) = vecOfRegionsAtFirstParallelLevel(iWorker); % Regions above will not take vertical space in indexMatrix
         indexMatrix(1:NUM_LEVEL_ASSIGN_REGIONS_P-1, iWorker) = find_ancestry(indexMatrix(NUM_LEVEL_ASSIGN_REGIONS_P,  iWorker), nRegions, NUM_PARTITIONS_J);
         indexMatrix(NUM_LEVEL_ASSIGN_REGIONS_P:end, iWorker) = find_branch_children(indexMatrix(NUM_LEVEL_ASSIGN_REGIONS_P, iWorker), nRegions, NUM_PARTITIONS_J, NUM_LEVELS_M);       

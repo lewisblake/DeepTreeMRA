@@ -18,20 +18,14 @@ optionalArguments = {0 NaN};
 optionalArguments(1 : numVarArgsIn) = varargin;
 [ varEps, predictionLocations ] = optionalArguments{:};
 % Calculate key quantities
-%totalRegions = sum(nRegions);
 cumulativeRegions = cumsum(nRegions);
-%nLevelToBeginInParallel = NUM_LEVELS_SERIAL_S + 1;
 logLikelihoodSum = 0;
 nRegionsAtFinestLevelForEachWorker = (nRegions(NUM_LEVELS_M)/NUM_WORKERS);
-% 1/7 LB: Calculate quantities needed for nTotalRegionsAssignedToEachWorker
 maxLevelOnASingleRow = sum(nRegions <= NUM_WORKERS); % How many times indices from a level are assigned to a worker
 counter = 1:(NUM_LEVELS_M - maxLevelOnASingleRow);
 nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.^counter);
-%nTotalRegionsInSerial = cumulativeRegions(NUM_LEVELS_SERIAL_S);
 lastIndexOfSecondFinestLevel = nRegions(NUM_LEVELS_M)-1;
 lastRowBeforeFinestLevel = find(indexMatrix(:,end)==lastIndexOfSecondFinestLevel);
-%lastIndexOfSerialLevel = nRegions(NUM_LEVELS_SERIAL_S+1)-1;
-%[lastRowInSerial, ~] = find(indexMatrix(:,:) == lastIndexOfSerialLevel,1);
 
 
 %% Pre-allocate space for codistributed arrays
@@ -40,7 +34,7 @@ if verbose
 end
 spmd(NUM_WORKERS)
     codistributionScheme = codistributor1d(2); % Distribute across the second dimension
-    % Create codistributed arrays. LB: CHECK SIZES OF THESE AGAIN ONCE COMPLETE!
+    % Create codistributed arrays.
     RpriorChol = cell(nTotalRegionsAssignedToEachWorker,  NUM_WORKERS, codistributionScheme);
     KcB = cell(nTotalRegionsAssignedToEachWorker,  NUM_WORKERS, codistributionScheme);
     AtildePrevious = cell(nTotalRegionsAssignedToEachWorker,  NUM_WORKERS, codistributionScheme);
@@ -51,27 +45,13 @@ spmd(NUM_WORKERS)
         posteriorPredictionVariance = cell(nRegionsAtFinestLevelForEachWorker, NUM_WORKERS, codistributionScheme); % Only need to store values at finest resolution
         Btilde = cell(nRegionsAtFinestLevelForEachWorker, NUM_WORKERS, codistributionScheme); % Only need to store values at finest resolution
         predictions = cell(nRegionsAtFinestLevelForEachWorker, NUM_WORKERS, codistributionScheme); % Only need to store values at finest resolution
-        RposteriorChol = cell(nTotalRegionsAssignedToEachWorker-nRegionsAtFinestLevelForEachWorker,  NUM_WORKERS, codistributionScheme); % LB: Doesn't need to include entries for finest resolution
-        KcholA = cell(nTotalRegionsAssignedToEachWorker-nRegionsAtFinestLevelForEachWorker,  NUM_WORKERS, codistributionScheme); % LB: Doesn't need to include finest resolution
-        Kcholw = cell(nTotalRegionsAssignedToEachWorker-nRegionsAtFinestLevelForEachWorker,  NUM_WORKERS, codistributionScheme); % LB: Doesn't need to include entries for finest resolution
+        RposteriorChol = cell(nTotalRegionsAssignedToEachWorker-nRegionsAtFinestLevelForEachWorker,  NUM_WORKERS, codistributionScheme); % Doesn't need to include entries for finest resolution
+        KcholA = cell(nTotalRegionsAssignedToEachWorker-nRegionsAtFinestLevelForEachWorker,  NUM_WORKERS, codistributionScheme); %  Doesn't need to include finest resolution
+        Kcholw = cell(nTotalRegionsAssignedToEachWorker-nRegionsAtFinestLevelForEachWorker,  NUM_WORKERS, codistributionScheme); % Doesn't need to include entries for finest resolution
     else % Workaround to pass correct object to create_prior
         predictionLocations = num2cell(nan(nTotalRegionsAssignedToEachWorker, NUM_WORKERS, codistributionScheme));
     end  
 end
-%% Pre-allocate space for cell arrays used in serial computations
-% For creating the prior, except for knots, which are made by
-% process_knots_for_serial()
-%RpriorCholSerial = cell(nTotalRegionsInSerial,1);
-%KcBSerial = cell(nTotalRegionsInSerial, 1);
-% For calculating the posterior...
-
-%% Create the prior distribution
-% Assuming here that the last region to compute in serial is located in the last indexMatrix column
-%knotsSubset = gather(knots(1:lastRowInSerial,:));
-%indexMatrixSubset = indexMatrix(1:lastRowInSerial,:);
-
-%% Process knots for serial computation - NOT sure if needed 8/24/20
-%[ knotsSerial ] = process_knots_for_serial( knotsSubset, indexMatrixSubset, NUM_LEVELS_SERIAL_S, nRegions);
 
 %%
 if verbose
@@ -86,7 +66,7 @@ spmd(NUM_WORKERS)
         % Find the ancestry for this jRegion
         indexAncestry = find_ancestry(indexCurrent, nRegions, NUM_PARTITIONS_J);
         % Fill vector with location of indexAncestry in indexMatrix
-        indexAncestryInIndexMatrixBool = ismember(indexMatrix(1:iRow, labindex), indexAncestry); % LB: this should work because the indices of the sub matrix do not change as we go down from top to bottom. Doesn't work when the submatrix goes from bottom to top in creating the posterior
+        indexAncestryInIndexMatrixBool = ismember(indexMatrix(1:iRow, labindex), indexAncestry); % this works because the indices of the sub matrix do not change as we go down from top to bottom. Doesn't work when the submatrix goes from bottom to top in creating the posterior
         indexAncestryInIndexMatrix = find(indexAncestryInIndexMatrixBool ~= 0); % keep only nonzeros which correspond to the indices of indexAncestry in indexMatrix    
         
         % Get local part of the objects needed to create the prior
@@ -166,9 +146,9 @@ if verbose
    disp('Calculating the serial section of the posterior ...');
 end
 %% "Serial Section"
-% Now the question becomes what to do with the "serial" portion of the
-% posterior. Want to minimize gathering from workers to clients. Also want
-% to do "serial" portion as little as possible, so that we perofm in
+% Now we do the serial section of the posterior. 
+% Want to minimize gathering from workers to clients. Also want
+% to do "serial" portion as little as possible, so that we compute in
 % parallel until the number of regions at the level is equal to NUM_WORKERS
 
 % Below is code to only gather the subsets of the distributed matrices
@@ -212,7 +192,7 @@ for iLevel = maxLevelOnASingleRow:-1:1
         gatheredAtildePrevious{jRegion} = AtildeCurrentj;
         
         [firstRowContainingThisRegion,firstColContainingThisRegion] = find(indexMatrixSubset(:,:)==jRegion, 1 );  
-        nTimesEachIndexIsRepeatedThisRow = ceil(NUM_WORKERS/nRegions(iLevel)); % 1/7 LB: added ceil() function around calculation
+        nTimesEachIndexIsRepeatedThisRow = ceil(NUM_WORKERS/nRegions(iLevel));
     
         if isPredicting % If predicting
             RposteriorChol(firstRowContainingThisRegion, firstColContainingThisRegion:firstColContainingThisRegion + nTimesEachIndexIsRepeatedThisRow - 1) = {RposteriorCholj};
@@ -235,7 +215,7 @@ if isPredicting
     if verbose
        disp('Beginning the spatial prediction ...')
     end
-    spmd(NUM_WORKERS)
+    spmd(NUM_WORKERS) % do prediction across cores
         for iRow = lastRowBeforeFinestLevel+1:nTotalRegionsAssignedToEachWorker
             mCounterIndex = iRow - lastRowBeforeFinestLevel;
             if NUM_LEVELS_M > 0
@@ -244,7 +224,7 @@ if isPredicting
                 indexAncestry = find_ancestry(index, nRegions,NUM_PARTITIONS_J);
                 
                 % Fill vector with location of indexAncestry in indexMatrix
-                indexAncestryInIndexMatrixBool = ismember(indexMatrix(1:iRow, labindex), indexAncestry); % LB: this should work because the indices of the sub matrix do not change as we go down from top to bottom. Doesn't work when the submatrix goes from bottom to top in creating the posterior
+                indexAncestryInIndexMatrixBool = ismember(indexMatrix(1:iRow, labindex), indexAncestry); % this works because the indices of the sub matrix do not change as we go down from top to bottom. Doesn't work when the submatrix goes from bottom to top in creating the posterior
                 indexAncestryInIndexMatrix = find(indexAncestryInIndexMatrixBool ~= 0); % keep only nonzeros which correspond to the indices of indexAncestry in indexMatrix    
         
                 % Collect the appropriate inputs to make predictions at

@@ -12,14 +12,6 @@ function [elapsedTime] = main()
 %   Option 'likelihood' only calculates the likelihood.
 %
 % Documentation in these scripts will make references to Katzfuss, 2017.
-%% Set up parallel pool - temproary for development
-
-%if isempty(gcp) % If there is no current parallel pool
-    %parpool(NUM_WORKERS) % Create parallel pool on default cluster of size NUM_WORKERS
-    %poolobj = gcp;
-    %addAttachedFiles(poolobj, {'find_ancestry.m', 'build_structure_in_parallel.m'} ) % can I add all files at once?
-%end
-
 
 %% User Input
 % Run user_input.m script to get variables into workspace
@@ -45,6 +37,12 @@ switch calculationType
     case 'optimize'        
         %% Optimize
         isPredicting = false;
+        % Optimize over sigma^2, beta, nu, varEps
+        % If a fixed parameter is instead desired, replace the
+        % corresponding thetaOpt with it's fixed value. For example, if a
+        % fixed smoothness of 1 is desired corresponding to a Whittle
+        % covariance function, replace thetaOpt(3) with 1 and ensure the
+        % other thetaOpt dimensions agree with the free paramters.
         fun = @(thetaOpt)MRA([thetaOpt(1) thetaOpt(2) thetaOpt(3)], outputData, knots, ...
             NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, thetaOpt(4));
         % Dummy values required by optimization routine
@@ -53,8 +51,8 @@ switch calculationType
         tic; x = fmincon(fun, initalEstimate, A, b, Aeq, beq, lowerBound, upperBound);
         elapsedTime = toc;  % Unsuppress output to print to command window
         % Assign values from optimization to theta and varEps
-        theta = [x(1) x(2) x(3)];
-        varEps = x(4);
+        theta = [x(1) x(2) x(3)]; % [sigma^2, beta, nu]
+        varEps = x(4); % nugget
         % Save optimize results
         save([resultsFilePath, 'Optimization_Results'], 'theta', 'varEps');
     case 'prediction'

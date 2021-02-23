@@ -108,7 +108,7 @@ The prediction grid is only defined within rectangular region given by the domai
 
 * `plotsFilePath`: Optional file path to save prediction plots if plotting.
 Set to be a string (e.g.`plotsFilesPath = '/Users/JerryGarcia/Figures/';`).
-By default plots are saved in the `Plots` folder.
+By default plots are saved in the Plots folder.
 
 #### User inputs relevant if calculationType = 'optimize'
 
@@ -127,7 +127,7 @@ The format for each of the following parameter vector bounds is [sigma^2, beta, 
 In `load_data.m` the user can specify the type of data being used and the file paths. 
 The file paths are presently relative for using the data provided. 
 Data in other locations can be loaded using absolute files paths. 
-In order to use a different data set, a new case within the switch clause must be added with the case given as a string, a file path to the data set with the `load()` function, and appropriate values for `theta` and `varEps`. 
+In order to use a different data set, a new case within the switch clause must be added with the case given as a string, a file path to the data set with the `load()` function, and appropriate values for `theta` and `varEps`. Note `theta` takes the form [sigma^2, beta, smoothness_nu], where sigma^2 is the partial sill, beta is the range parameter, and smoothness_nu is the Matérn smoothness parameter. 
 If these values are not known, they can be given lower and upper bounds and can then be estimated using the `"optimize"` mode. 
 An example of what a case for a new data set may be is as follows.
 
@@ -136,7 +136,7 @@ e.g., Within the switch clause, specify:
 ```matlab
 case "myData"
 	load('/Users/JerryGarcia/Documents/Data/myData.mat')
-theta = [2, 1]; varEps = 0.01;
+theta = [2, 1, 0.5]; varEps = 0.01;
 ```
 
 Input data are assumed to have three columns 'x', 'y', and 'values'. For other data, the code in `load_data.m` may be modified or coerced from their native format into variables with those names.
@@ -146,14 +146,14 @@ Values can determined by the `"optimize"` mode. For the `"satellite"` and `"simu
 
 ### `evaluate_covariance.m` 
 
-`evaluate_covariance()` is set up as a Matérn covariance function. Some closed forms for special choices the smoothness parameter (i.e., 0.5, 1.5, and 2.5) are hardcoded to avoid evaluating Bessel functions, although in principle any smoothness parameter may be used. If another covariance function is desired, the code can be modified here. The default smoothness for the included data sets is 0.5, corresponding to an exponential covariance.  
+`evaluate_covariance()` is set up as a Matérn covariance function using Euclidean distance. Some closed forms for special choices the smoothness parameter (i.e., 0.5, 1.5, and 2.5) are hardcoded to avoid evaluating Bessel functions, although in principle any smoothness parameter may be used. If another covariance function is desired, the code can be modified here. The default smoothness for the included data sets is 0.5, corresponding to an exponential covariance.  
 
 
 ## Output:
 
 Model output is dependent on the `calculationType` (computational mode) performed. 
 
-1) For the `"prediction"` mode, the output is a .mat file with the MRA results stored within the `Results` folder. This .mat file contains the prediction locations, prediction mean, and the prediction variance.
+1) For the `"prediction"` mode, the output is a .mat file with the MRA results stored within the Results folder. This .mat file contains the prediction locations, prediction mean, and the prediction variance.
 If either boolean variables `"displayPlots"` or `"savePlots"` are set to true, three plots are also produced corresponding to the observations, predicted values, and the prediction variance with the `create_plots()` function. 
 Saving these plots can be accomplished by setting savePlots to true in user_input.m. 
 
@@ -163,3 +163,5 @@ Saving these plots can be accomplished by setting savePlots to true in user_inpu
 If verbose is set to true, the log-likelihood will print to the Command Window as well.
 
 4) For the `"build_structure"` mode, summary statistics of the distribution of observations to regions at the finest resolution are reported within '/Results/structureSummaryStats.txt'. A histogram is also produced within the Plots folder.
+
+The code is set up assuming Unix-like file paths for saving ad plotting.

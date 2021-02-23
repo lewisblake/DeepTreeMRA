@@ -1,7 +1,8 @@
 function [ knots, partitions, nRegions, outputData, predictionLocations, indexMatrix ] = build_structure_in_parallel( NUM_LEVELS_M, ...
     NUM_PARTITIONS_J, NUM_KNOTS_r, domainBoundaries, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, verbose, varargin )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+% BUILD_STRUCTURE_IN_PARALLEL
+%   This function builds the hierarchical domain partitioning defined by
+%   the MRA in parallel across NUM_WORKERS
 %% Check inputs and display progress check
 
 % Check number of optional input arguments does not exceed two
@@ -30,7 +31,6 @@ end
 %% Calculate quantities of interest
 mLevels = 0:NUM_LEVELS_M-1; % Create a vector of levels
 nRegions = NUM_PARTITIONS_J.^mLevels; % Vector of regions (partitions) at each level
-%totalRegions = sum(nRegions); % Calculate total number of regions
 cummulativeRegions = cumsum(nRegions);
 
 
@@ -56,14 +56,13 @@ nTotalRegionsAssignedToEachWorker = maxLevelOnASingleRow + sum(NUM_PARTITIONS_J.
 [indexMatrix] = create_indexMatrix( NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P);
 % Find the index within the indexMatrix corresponding to the finest level at which the knots are not set to the data.
 indexOfFinestKnotLevelWithinIndexMatrix = find(indexMatrix(:,end) == indexEndFinestKnotLevel);
-%nRowsWithRepeatedEntriesInIndexMatrix = sum(nRegions < NUM_WORKERS);
 %% Pre-allocate memory for codistributed arrays
 spmd(NUM_WORKERS)
     codistributionScheme = codistributor1d(2); % Distribute across the second dimension
     % Create codistributed cell arrays
     knots = cell(nTotalRegionsAssignedToEachWorker,  NUM_WORKERS, codistributionScheme);
     outputData = cell(nRegionsAtFinestLevelForEachWorker, NUM_WORKERS, codistributionScheme);
-    partitions = cell(indexOfFinestKnotLevelWithinIndexMatrix+1,  NUM_WORKERS, codistributionScheme); % 12/3: LB changed from nTotalRegionsAssignedToEachWorker. 12/5: last entry in each column is empty
+    partitions = cell(indexOfFinestKnotLevelWithinIndexMatrix+1,  NUM_WORKERS, codistributionScheme);
     predictionLocations = cell(nRegionsAtFinestLevelForEachWorker, NUM_WORKERS, codistributionScheme);
 end
 %% Construct zeroth level
@@ -99,7 +98,7 @@ spmd(NUM_WORKERS)
         parentPartitionsLocalPart = getLocalPart(partitions(thisIndexParentInIndexMatrix, labindex));
         xMin = parentPartitionsLocalPart{:}(:,1); xMax = parentPartitionsLocalPart{:}(:,2); yMin = parentPartitionsLocalPart{:}(:,3); yMax = parentPartitionsLocalPart{:}(:,4);
         foundChildren = find_children(indexParent, nRegions, NUM_PARTITIONS_J);
-        thesePartitionBoundaries = find(foundChildren <= indexCurrent, 1, 'last'); % LB: Think this is faster than applying find() to direct values since logical array but need to check
+        thesePartitionBoundaries = find(foundChildren <= indexCurrent, 1, 'last'); 
         thisXMin = xMin(thesePartitionBoundaries); thisXMax = xMax(thesePartitionBoundaries);
         thisYMin = yMin(thesePartitionBoundaries); thisYMax = yMax(thesePartitionBoundaries);
         % Create knots
@@ -122,7 +121,7 @@ spmd(NUM_WORKERS)
     % cell2mat can be applied. if we were considering more general
     % paritioning methods, this would not work and we may need to consider
     % another approach like I did in the C++ buildStructure.cpp for
-    % Math-540. But the below implementation is vectorized so for now keep.
+    % Math-540. But the below implementation is vectorized so keep for now.
     thisWorkersAssignmentPartitionsAsMatrix = cell2mat(getLocalPart(thisWorkersAssignmentPartitions));
     workerXMin = min(thisWorkersAssignmentPartitionsAsMatrix(:,1));
     workerXMax = max(thisWorkersAssignmentPartitionsAsMatrix(:,2));
@@ -147,7 +146,7 @@ spmd(NUM_WORKERS)
             parentPartitionsLocalPart = getLocalPart(partitions(thisIndexParentInIndexMatrix, labindex));
             xMin = parentPartitionsLocalPart{:}(:,1); xMax = parentPartitionsLocalPart{:}(:,2); yMin = parentPartitionsLocalPart{:}(:,3); yMax = parentPartitionsLocalPart{:}(:,4);
             foundChildren = find_children(indexParent, nRegions, NUM_PARTITIONS_J);
-            thesePartitionBoundaries = find(foundChildren <= indexCurrent, 1, 'last'); % LB: Think this is faster than applying find() to direct values since logical array but need to check
+            thesePartitionBoundaries = find(foundChildren <= indexCurrent, 1, 'last');
             thisXMin = xMin(thesePartitionBoundaries); thisXMax = xMax(thesePartitionBoundaries);
             thisYMin = yMin(thesePartitionBoundaries); thisYMax = yMax(thesePartitionBoundaries);
             % find the rows of this worker's data which are contained within

@@ -1,4 +1,4 @@
-% Start clustervv
+% Start cluster
 cluster = parcluster('cheyenne-R2020a')
 
 % Create Communcaiting Jobs
