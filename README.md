@@ -29,8 +29,8 @@ Within the Matlab Editor Tab, selecting the 'Run' button from `main.m` will exec
 The repository contains all files required to run the code.
 Within the repository, there are three other folders: `Data`, `Plots`, and `Results`.
 The `Data` folder contains example data sets. 
-The `Results` folder is the default folder for results to be saved. Initially empty. 
-The `Plots` folder is the default folder for spatial prediction plots to be saved. Initially empty.
+The `Results` folder is the default folder for results to be saved. Initally contains a placeholder textfile.
+The `Plots` folder is the default folder for spatial prediction plots to be saved. Initally contains a placeholder textfile.
 
 ## Example Data
 
