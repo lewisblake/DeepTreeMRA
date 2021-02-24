@@ -107,7 +107,7 @@ Set to be a string (e.g. `resultsFilesPath = '/Users/JerryGarcia/Desktop/';`). B
 The prediction grid is only defined within rectangular region given by the domain boundaries discussed above. If desired, a test of predefined test locations can be chosen by setting the `predictionVestor` variable to these locations in an alagous format to that already in `load_data.m`.)
 
 * `plotsFilePath`: Optional file path to save prediction plots if plotting.
-Set to be a string (e.g.`plotsFilesPath = '/Users/JerryGarcia/Figures/';`).
+Set to be a string (e.g.`plotsFilesPath = '/path/to/save/figures/';`).
 By default plots are saved in the Plots folder.
 
 #### User inputs relevant if calculationType = 'optimize'
@@ -135,7 +135,7 @@ e.g., Within the switch clause, specify:
 
 ```matlab
 case "myData"
-	load('/Users/JerryGarcia/Documents/Data/myData.mat')
+	load('/path/to/myData.mat')
 theta = [2, 1, 0.5]; varEps = 0.01;
 ```
 
