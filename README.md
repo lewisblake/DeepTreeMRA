@@ -62,17 +62,17 @@ Note that `NUM_LEVELS_M` is a positive integer.
 
 In `user_input.m`, the areas requiring user input are as follows:
 
-* `dataSource`: | `"satellite"` | `"simulated"` |
+* `dataSource`: | `'satellite'` | `'simulated'` |
     - These are the `dataSource` options for the data provided. Default is `"satellite"`.
     - In order to use a different data set, see the section of `load_data.m` below and feed the case string for the data used to `dataSource` in `user_input.m`.
 
-* `calculationType`: | `"prediction"` | `"optimize"` | `"likelihood"` | `"build_structure"` |
+* `calculationType`: | `'prediction'` | `'optimize'` | `'likelihood'` | `'build_structure'` |
 
-Default is `"likelihood"`.`calculationType` can be set to any of the following calculation modes:
-*  `"prediction"`: Uses given values for the parameters (`theta` and `varEps`) and just conducts spatial prediction. Parameters can be changed in `load_data.m`	
-* `"optimize"`: Optimizes over the range, variance and measurement error. The range and variance parameters are stored as a vector: `theta`. The measurement error is stored as a double: `varEps`.	
-* `"likelihood"`: Calculates the log-likelihood.
-* `"build_structure"`: Builds the multi-resolution structure. Reports summary statistics and produces a histogram of the number of observations assigned to regions at the finest resolution.
+Default is `'likelihood'`.`calculationType` can be set to any of the following calculation modes:
+*  `'prediction'`: Uses given values for the parameters (`theta` and `varEps`) and just conducts spatial prediction. Parameters can be changed in `load_data.m`	
+* `'optimize'`: Optimizes over the range, variance and measurement error. The range and variance parameters are stored as a vector: `theta`. The measurement error is stored as a double: `varEps`.	
+* `'likelihood'`: Calculates the log-likelihood.
+* `'build_structure'`: Builds the multi-resolution structure. Reports summary statistics and produces a histogram of the number of observations assigned to regions at the finest resolution.
 
 #### User Input relevant for any `calculationType`:
 
@@ -90,10 +90,12 @@ This quantity determines the buffer between the boundaries of a region where kno
 
 * `NUM_LEVEL_ASSIGN_REGIONS_P`: The level at which regions are assigned across workers. This determines how much for the hierarchical domain paritioning each worker is assigned. Default is 3.
 
+* `fitRegressionModel`: Boolean variable indicating whether a linear regression model in x and y should be fit to the data. If the mean-zero assumption is already satified, modelers may consider setting to false. Default is true.
+
 * `verbose`: Boolean variable indicating whether to produce progress indicators. Default is true.
 
 * `resultsFilePath`: Optional file path to save results for each `calculationType`. 
-Set to be a string (e.g. `resultsFilesPath = '/Users/JerryGarcia/Desktop/';`). By default results are saved in the `Results` folder.
+Set to be a char (e.g. `resultsFilesPath = '/Users/Myself/Desktop/';`). By default results are saved in the `Results` folder.
 
 #### User inputs relevant if `calculationType = "prediction"` or `"build_structure"`
 
@@ -107,7 +109,7 @@ Set to be a string (e.g. `resultsFilesPath = '/Users/JerryGarcia/Desktop/';`). B
 The prediction grid is only defined within rectangular region given by the domain boundaries discussed above. If desired, a test of predefined test locations can be chosen by setting the `predictionVestor` variable to these locations in an alagous format to that already in `load_data.m`.)
 
 * `plotsFilePath`: Optional file path to save prediction plots if plotting.
-Set to be a string (e.g.`plotsFilesPath = '/path/to/save/figures/';`).
+Set to be a char (e.g.`plotsFilesPath = '/path/to/save/figures/';`).
 By default plots are saved in the Plots folder.
 
 #### User inputs relevant if calculationType = 'optimize'
@@ -127,14 +129,14 @@ The format for each of the following parameter vector bounds is [sigma^2, beta, 
 In `load_data.m` the user can specify the type of data being used and the file paths. 
 The file paths are presently relative for using the data provided. 
 Data in other locations can be loaded using absolute files paths. 
-In order to use a different data set, a new case within the switch clause must be added with the case given as a string, a file path to the data set with the `load()` function, and appropriate values for `theta` and `varEps`. Note `theta` takes the form [sigma^2, beta, smoothness_nu], where sigma^2 is the partial sill, beta is the range parameter, and smoothness_nu is the Matérn smoothness parameter. 
+In order to use a different data set, a new case within the switch clause must be added with the case given as a char, a file path to the data set with the `load()` function, and appropriate values for `theta` and `varEps`. Note `theta` takes the form [sigma^2, beta, smoothness_nu], where sigma^2 is the partial sill, beta is the range parameter, and smoothness_nu is the Matérn smoothness parameter. 
 If these values are not known, they can be given lower and upper bounds and can then be estimated using the `"optimize"` mode. 
 An example of what a case for a new data set may be is as follows.
 
 e.g., Within the switch clause, specify:
 
 ```matlab
-case "myData"
+case 'myData'
 	load('/path/to/myData.mat')
 theta = [2, 1, 0.5]; varEps = 0.01;
 ```
@@ -142,7 +144,7 @@ theta = [2, 1, 0.5]; varEps = 0.01;
 Input data are assumed to have three columns 'x', 'y', and 'values'. For other data, the code in `load_data.m` may be modified or coerced from their native format into variables with those names.
 
 The user can also change the values of `theta` and `varEps` in `load_data.m`.
-Values can determined by the `"optimize"` mode. For the `"satellite"` and `"simulated"` data provided, those values as determined by the `"optimize"` mode are set as the default values.
+Values can determined by the `'optimize'` mode. For the `'satellite'` and `'simulated'` data provided, those values as determined by the `'optimize'` mode are set as the default values.
 
 ### `evaluate_covariance.m` 
 
