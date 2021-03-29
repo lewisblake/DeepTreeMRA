@@ -1,5 +1,5 @@
 function [ RpriorCholj, KcBc, Atj, wtj, returnedLikelihoodPred ] = create_prior( theta, ...
-    NUM_LEVELS_M, knotsb, RpriorCholb, KcBb, dataj, varargin )
+    domainGeometry, NUM_LEVELS_M, knotsb, RpriorCholb, KcBb, dataj, varargin )
 %% CREATE_PRIOR creates prior values
 %   for current region and ancestry; this function contains optional input
 %   and output arguments depending on whether the level is the last level
@@ -35,7 +35,7 @@ V = cell(currentLevel, 1);
 
 for iLevel = 1 : currentLevel
     % For each l, compute the covariance matrix between knots at level l and knots at current level L
-    V{iLevel,1} = evaluate_covariance(knotsb{currentLevel,1}, knotsb{iLevel,1}, theta);
+    V{iLevel,1} = evaluate_covariance(knotsb{currentLevel,1}, knotsb{iLevel,1}, theta, domainGeometry);
     
     for k = 1 : (iLevel-1)
         
@@ -105,14 +105,14 @@ if ~isCurrentLevelLessThanLastLevel % Check if region is at lowest level
         Vp = cell(currentLevel, 1);
         
         for iLevel = 1 : currentLevel
-            Vp{iLevel} = evaluate_covariance(predictionLocationsj, knotsb{iLevel}, theta);
+            Vp{iLevel} = evaluate_covariance(predictionLocationsj, knotsb{iLevel}, theta, domainGeometry);
             for k = 1 : (iLevel-1)
                 Vp{iLevel} = Vp{iLevel} - KcBp{k}'*KcB{iLevel,1}{k,1};
             end
             KcBp{iLevel} = RpriorChol{iLevel} \ Vp{iLevel}';
         end
         
-        Vpp = evaluate_covariance(predictionLocationsj, predictionLocationsj, theta); % Covariance matrix of prediction locations
+        Vpp = evaluate_covariance(predictionLocationsj, predictionLocationsj, theta, domainGeometry); % Covariance matrix of prediction locations
         
         for iLevel = 1 : (currentLevel-1)
             Vpp = Vpp - KcBp{iLevel}'*KcBp{iLevel};

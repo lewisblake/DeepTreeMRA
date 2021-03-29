@@ -1,4 +1,4 @@
-function [] = validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath, fitRegressionModel)
+function [] = validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath, fitRegressionModel, domainGeometry)
 %% USER_INPUT_ERROR_HANDLING checks validity of user input
 %
 %   Input: NUM_LEVELS_M (double), NUM_PARTITIONS_J (double), NUM_KNOTS_r
@@ -39,6 +39,8 @@ elseif ~ischar(plotsFilePath)
     error('myfuns:validate_user_input: plotsFilePath must be a char. See default.')
 elseif ~islogical(fitRegressionModel)
     error('myfuns:validate_user_input: fitRegressionModel must be a boolean.')
+elseif ~strcmp(domainGeometry, {'plane', 'sphere'})
+    error('myfuns:valuidate_user_input: domainGeometry must be either plane or sphere')
 end
 
 end
