@@ -19,6 +19,7 @@ clear; %addpath('subroutines');
 % switch clause of load_data.m
 % Included data sets are 'satellite' and 'simulated'.
 dataSource = 'satellite'; % Default is 'satellite'.
+domainGeometry = 'plane'; % Options are 'plane' and 'sphere'
 % Choose calculationType: | 'prediction | 'optimize' | 'likelihood' |
 calculationType = 'prediction'; % Default is likelihood.
 %% Inputs relevant for any calculationType

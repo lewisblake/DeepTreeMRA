@@ -18,7 +18,7 @@ function [elapsedTime] = main()
 user_input;
 
 %% Validate User Input
-validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath, fitRegressionModel);
+validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath, fitRegressionModel, domainGeometry);
 
 %% Data Processing: Load data using load_data() function
 [ data, regressionModel, domainBoundaries, predictionVector, theta, varEps ] = load_data(dataSource, nXGrid, nYGrid, offsetPercentage, fitRegressionModel);
@@ -43,7 +43,7 @@ switch calculationType
         % fixed smoothness of 1 is desired corresponding to a Whittle
         % covariance function, replace thetaOpt(3) with 1 and ensure the
         % other thetaOpt dimensions agree with the free paramters.
-        fun = @(thetaOpt)MRA([thetaOpt(1) thetaOpt(2) thetaOpt(3)], outputData, knots, ...
+        fun = @(thetaOpt)MRA([thetaOpt(1) thetaOpt(2) thetaOpt(3)], domainGeometry, outputData, knots, ...
             NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, thetaOpt(4));
         % Dummy values required by optimization routine
         A = []; b = []; Aeq = []; beq = [];
@@ -59,7 +59,7 @@ switch calculationType
         %% Prediction
         isPredicting = true;
         tic;
-        [ ~, predictions ] = MRA(theta, outputData, knots, ...
+        [ ~, predictions ] = MRA(theta, domainGeometry, outputData, knots, ...
             NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, varEps, predictionLocations);
         elapsedTime = toc;  % Unsurpress output to print to command window
         % Reformat data for plotting:     
@@ -85,7 +85,7 @@ switch calculationType
         %% Likelihood
         isPredicting = false;
         tic;
-        [ sumLogLikelihood ] = MRA(theta, outputData, knots, ...
+        [ sumLogLikelihood ] = MRA(theta, domainGeometry, outputData, knots, ...
             NUM_LEVELS_M, NUM_PARTITIONS_J, nRegions, indexMatrix, isPredicting, NUM_WORKERS, verbose, varEps);  % Unsuppress output to print to command window
         elapsedTime = toc; % Unsuppress output to print to command window
         if verbose % Display the sumLogLikelihood
