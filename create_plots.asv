@@ -10,12 +10,12 @@ function [] = create_plots(data, predictionLocations, predictionMean, prediction
 if verbose
     disp('Beginning plotting')
 end
-% get the size of the data array
-[~, nCols] = size(data);
-% values is stored in different column depending if linear trend removed
+
+[nRows, nCols] = size(data);
+
 if nCols == 3
     values = data(:,3);
-elseif nCols == 4
+if nCols == 4
     values = data(:,4);
 end
 
@@ -24,7 +24,7 @@ figure
 if ~displayPlots
     set(gcf,'Visible', 'off');
 end
-scatter(data(:,1), data(:,2), 5, values,'square', 'filled');
+scatter(data(:,1), data(:,2), 5, values),'square', 'filled');
 colormap(parula)
 colorbar
 [cmin,cmax] = caxis;

@@ -1,4 +1,4 @@
-function [ data, regressionModel, domainBoundaries, predictionVector, theta, varEps ] = load_data(dataSource, nXGrid, nYGrid, offsetPercentage, fitRegressionModel)
+function [ data, regressionModel, domainBoundaries, predictionVector, theta, varEps ] = load_data(dataSource, nXGrid, nYGrid, offsetPercentage, regressionModel)
 %% LOAD_DATA Loads data from various sources
 %   Data files are loaded as a function of a variable called dataType
 %
@@ -60,12 +60,11 @@ data(:,2) = y(logicalInd);
 
 % Detrend data.
 if fitRegressionModel
-    data(:,4) = values(logicalInd);
     regressionModel = fitlm(data(:,1:2),data(:,4), 'linear');
     residuals = table2array(regressionModel.Residuals(:, 1));
     data(:,3) = residuals;
+    data(:,4) = values(logicalInd);
 else
-    regressionModel = nan;
     data(:,3) = values(logicalInd);
 end
 

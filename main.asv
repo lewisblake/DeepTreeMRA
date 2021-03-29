@@ -72,7 +72,7 @@ switch calculationType
         if fitRegressionModel % Add the prediction from the regression
             predRegression = predict(regressionModel, predictionLocations);
             predictionMean = predictions(:,1) + predRegression;
-        else % No linear trend removed
+        else % No l
             predictionMean = predictions(:,1);
         end
         % Save prediction results
