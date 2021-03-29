@@ -20,7 +20,7 @@ clear; %addpath('subroutines');
 % Included data sets are 'satellite' and 'simulated'.
 dataSource = 'satellite'; % Default is 'satellite'.
 % Choose calculationType: | 'prediction | 'optimize' | 'likelihood' |
-calculationType = 'prediction'; % Default is likelihood.
+calculationType = "likelihood"; % Default is likelihood.
 %% Inputs relevant for any calculationType
 % Below are the choices for M, J, and r as denoted in Katzfuss 2017.
 % To estimate NUM_LEVELS_M, see find_num_levels_suggested_required.m. J must either be 2 or 4.
@@ -30,13 +30,13 @@ NUM_KNOTS_r = 64; % Number of knots per partition. Default is 64.
 offsetPercentage = 0.01; % Offset percentage from partition boundaries. Default is 0.01.
 NUM_WORKERS = 4; % Number of workers in parallel pool. Default is 4.
 NUM_LEVEL_ASSIGN_REGIONS_P = 3; % Number of levels to compute in serial. Default is ??.
-fitRegressionModel = true; % Should a linear trend in x and y be removed from the field?
+fitRegressionModel = false; % Should a linear trend in x and y be removed from the field?
 resultsFilePath = './Results/';  % By default, results from all routines are saved in the Results folder.
 verbose = true; % Boolean variable indicating whether to display progress indicators. Default is true.
 
 %% Inputs relevant if calculationType = 'prediction'.
 % That is, these inputs are only used in prediction mode.
-displayPlots = true; % Boolean variable indicating whether to display plots when executing the 'prediction' calculationType. Default is true.
+displayPlots = false; % Boolean variable indicating whether to display plots when executing the 'prediction' calculationType. Default is true.
 savePlots = false; % Boolean variable indicating whether to save plots when executing the 'prediction' calculationType. Default is false.
 nXGrid = 200; % Number of prediction grid points in x-direction. Only required for 'prediction' calculationType. Default is 200.
 nYGrid = 200; % Number of prediction grid points in y-direction. Only required for 'prediction' calculationType. Default is 200.

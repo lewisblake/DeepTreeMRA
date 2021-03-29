@@ -1,4 +1,4 @@
-function [] = validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath)
+function [] = validate_user_input(calculationType, NUM_LEVELS_M, NUM_PARTITIONS_J, NUM_KNOTS_r, offsetPercentage, NUM_WORKERS, NUM_LEVEL_ASSIGN_REGIONS_P, nXGrid, nYGrid, displayPlots, savePlots, verbose, resultsFilePath, plotsFilePath, fitRegressionModel)
 %% USER_INPUT_ERROR_HANDLING checks validity of user input
 %
 %   Input: NUM_LEVELS_M (double), NUM_PARTITIONS_J (double), NUM_KNOTS_r
@@ -37,6 +37,8 @@ elseif ~ischar(resultsFilePath)
     error('myfuns:validate_user_input: resultsFilePath must be a char. See default.')
 elseif ~ischar(plotsFilePath)
     error('myfuns:validate_user_input: plotsFilePath must be a char. See default.')
+elseif ~islogical(fitRegressionModel)
+    error('myfuns:validate_user_input: fitRegressionModel must be a boolean.')
 end
 
 end
