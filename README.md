@@ -66,6 +66,9 @@ In `user_input.m`, the areas requiring user input are as follows:
     - These are the `dataSource` options for the data provided. Default is `"satellite"`.
     - In order to use a different data set, see the section of `load_data.m` below and feed the case string for the data used to `dataSource` in `user_input.m`.
 
+* `domainGeometry`: | `plane` | `sphere`
+	- Flag to determine whether the data should be modeled as being on a plane or a sphere. If `plane` is chosen, distances are computed in units provided by the data. If `sphere` is chosen, distances are computed using chordal distance (3D straight-line Euclidean distance) in kilometers.
+
 * `calculationType`: | `'prediction'` | `'optimize'` | `'likelihood'` | `'build_structure'` |
 
 Default is `'likelihood'`.`calculationType` can be set to any of the following calculation modes:
@@ -73,6 +76,7 @@ Default is `'likelihood'`.`calculationType` can be set to any of the following c
 * `'optimize'`: Optimizes over the range, variance and measurement error. The range and variance parameters are stored as a vector: `theta`. The measurement error is stored as a double: `varEps`.	
 * `'likelihood'`: Calculates the log-likelihood.
 * `'build_structure'`: Builds the multi-resolution structure. Reports summary statistics and produces a histogram of the number of observations assigned to regions at the finest resolution.
+
 
 #### User Input relevant for any `calculationType`:
 
@@ -148,7 +152,7 @@ Values can determined by the `'optimize'` mode. For the `'satellite'` and `'simu
 
 ### `evaluate_covariance.m` 
 
-`evaluate_covariance()` is set up as a Matérn covariance function using Euclidean distance. Some closed forms for special choices the smoothness parameter (i.e., 0.5, 1.5, and 2.5) are hardcoded to avoid evaluating Bessel functions, although in principle any smoothness parameter may be used. If another covariance function is desired, the code can be modified here. The default smoothness for the included data sets is 0.5, corresponding to an exponential covariance.  
+`evaluate_covariance()` is set up as a Matérn covariance function. Distance used (and interpretation of the range paramter) are dependent on the `domainGeometry` used. Some closed forms for special choices the smoothness parameter (i.e., 0.5, 1.5, and 2.5) are hardcoded to avoid evaluating Bessel functions, although in principle any smoothness parameter may be used. If another covariance function is desired, the code can be modified here. The default smoothness for the included data sets is 0.5, corresponding to an exponential covariance.  
 
 
 ## Output:
