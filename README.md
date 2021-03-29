@@ -66,7 +66,7 @@ In `user_input.m`, the areas requiring user input are as follows:
     - These are the `dataSource` options for the data provided. Default is `"satellite"`.
     - In order to use a different data set, see the section of `load_data.m` below and feed the case string for the data used to `dataSource` in `user_input.m`.
 
-* `domainGeometry`: | `'plane'` | `'sphere'`
+* `domainGeometry`: | `'plane'` | `'sphere'` |
 	- Flag to determine whether the data should be modeled as being on a plane or a sphere. If `plane` is chosen, distances are computed in units provided by the data. If `sphere` is chosen, distances are computed using chordal distance (3D straight-line Euclidean distance) in kilometers.
 
 * `calculationType`: | `'prediction'` | `'optimize'` | `'likelihood'` | `'build_structure'` |
