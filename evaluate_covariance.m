@@ -18,7 +18,6 @@ switch domainGeometry
     % pairwise distance using chordal distance
     dist_scaled = pdist2([x1, y1, z1], [x2, y2, z2])/theta(2);
     case 'plane'
-    smoothness_nu = theta(3);
     dist_scaled = pdist2(locs1, locs2)/theta(2);   
 end
 
