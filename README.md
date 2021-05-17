@@ -177,4 +177,4 @@ The code is set up assuming Unix-like file paths for saving and plotting.
 ## Citation:
 
 When using this package please cite:
-* Blake, L. R., Huang, H., Vanderwende, B., & Hammerling, D. M. (2021). _The Deep-Tree Approach: An Improved Parallel Matlab Implementation of the Multi-resolution Approximation for Massive Spatial on High-Performance Computing Systems_ (No. NCAR/TN-565+STR). doi:10.5065/pzzt-wj18
+* Blake, L. R., Huang, H., Vanderwende, B., & Hammerling, D. M. (2021). _The Deep-Tree Approach: An Improved Parallel Matlab Implementation of the Multi-resolution Approximation for Massive Spatial Data on High-Performance Computing Systems_ (No. NCAR/TN-565+STR). doi:10.5065/pzzt-wj18
