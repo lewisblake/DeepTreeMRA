@@ -6,6 +6,8 @@
 *	Lewis Blake, Colorado School of Mines (lblake@mines.edu).
 *	Dorit Hammerling, Colorado School of Mines (hammerling@mines.edu).
 
+An associated technical report is available [here.](http://n2t.net/ark:/85065/d7dj5k1r)
+
 This code is based on the MRA model described in
 ["A multi-resolution approximation for massive spatial datasets" by Matthias Katzfuss, 2017](https://amstat.tandfonline.com/doi/abs/10.1080/01621459.2015.1123632) in the Journal of American Statistical Association (DOI: 10.1080/01621459.2015.1123632). Also available at [arXiv](https://arxiv.org/abs/1507.04789).
 Throughout the codebase there are references to this manuscript.
@@ -171,3 +173,8 @@ If verbose is set to true, the log-likelihood will print to the Command Window a
 4) For the `"build_structure"` mode, summary statistics of the distribution of observations to regions at the finest resolution are reported within '/Results/structureSummaryStats.txt'. A histogram is also produced within the Plots folder.
 
 The code is set up assuming Unix-like file paths for saving and plotting.
+
+## Citation:
+
+When using this package please cite:
+* Blake, L. R., Huang, H., Vanderwende, B., & Hammerling, D. M. (2021). _The Deep-Tree Approach: An Improved Parallel Matlab Implementation of the Multi-resolution Approximation for Massive Spatial on High-Performance Computing Systems_ (No. NCAR/TN-565+STR). doi:10.5065/pzzt-wj18
