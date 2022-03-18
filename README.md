@@ -112,7 +112,7 @@ Set to be a char (e.g. `resultsFilesPath = '/Users/Myself/Desktop/';`). By defau
 * `nXGrid`: Number of prediction grid points in x-direction. By default set to 200.
 * `nYGrid`: Number of prediction gridpoints in y-direction. By default set to 200.
 (Note: These parameters define a `nXGrid` x `nYGrid` prediction grid of spatial prediction locations if predicting.
-The prediction grid is only defined within rectangular region given by the domain boundaries discussed above. If desired, a test of predefined test locations can be chosen by setting the `predictionVestor` variable to these locations in an alagous format to that already in `load_data.m`.)
+The prediction grid is only defined within rectangular region given by the domain boundaries discussed above. If desired, a test of predefined test locations can be chosen by setting the `predictionVestor` variable to these locations in an analogous format to that already in `load_data.m`.)
 
 * `plotsFilePath`: Optional file path to save prediction plots if plotting.
 Set to be a char (e.g.`plotsFilesPath = '/path/to/save/figures/';`).
