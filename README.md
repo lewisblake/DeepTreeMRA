@@ -49,7 +49,7 @@ Within `user_input.m`, users can specify the number of workers in the parallel p
 SPMD blocks throughout the code will execute in parallel using `NUM_WORKERS` workers.
 Within the Matlab Cluster Profile Manager, the user can specify the desired cluster settings.
 These settings include the number of nodes, nmber of cores, number of MPI processes, wall times, and many others.
-For further reference please see [the Matlab documentation](https://www.mathworks.com/help/distcomp/discover-clusters-and-use-cluster-profiles.html). The code was tested on the National Center for Atmospheric Research's (NCAR) supercomputer [Cheyenne](https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne). The Computational & Information Systems Lab (CISL) also has an informative introduction to parallel computing with Matlab that may be of interest to some users [here](https://www2.cisl.ucar.edu/resources/matlab-parallel-computing-toolbox-cheyenne).  
+For further reference please see [the Matlab documentation](https://www.mathworks.com/help/distcomp/discover-clusters-and-use-cluster-profiles.html). The code was tested on the National Center for Atmospheric Research's (NCAR) supercomputer [Cheyenne](https://www2.cisl.ucar.edu/resources/computational-systems/cheyenne). The Computational & Information Systems Lab (CISL) also has an informative introduction to parallel computing with Matlab that may be of interest to some users [here](https://arc.ucar.edu/knowledge_base/70549941).  
 
 ## Preliminaries:
 
